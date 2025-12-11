@@ -1,0 +1,5 @@
+{
+  "name": "TrendPulse AI - Real-time Social Intelligence",
+  "description": "A real-time dashboard powered by Gemini and simulated Confluent streams to detect, analyze, and capitalize on social media trends instantly.",
+  "requestFramePermissions": []
+}
