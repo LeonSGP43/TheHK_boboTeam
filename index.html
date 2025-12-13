@@ -1,25 +1,76 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TrendPulse AI | Accelerate Innovation</title>
+    <title>Trend S&C | Intelligence Ops</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              background: "var(--background)", 
+              card: "var(--card)", 
+              text: "var(--text)",
+              border: "var(--border)",
+              
+              // Level 1: Spark (Orange/Red)
+              spark: { DEFAULT: "#ff6b35", glow: "#ff8c5a", dim: "rgba(255, 107, 53, 0.1)" },
+              // Level 2: Pulse (Electric Blue)
+              pulse: { DEFAULT: "#00d4ff", glow: "#5ce1ff", dim: "rgba(0, 212, 255, 0.1)" },
+              // Level 3: Surge (Deep Purple)
+              surge: { DEFAULT: "#a855f7", glow: "#c084fc", dim: "rgba(168, 85, 247, 0.1)" },
+              // Level 4: Alpha (Gold)
+              alpha: { DEFAULT: "#ffd700", glow: "#ffe44d", dim: "rgba(255, 215, 0, 0.1)" },
+            },
+            fontFamily: {
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+              mono: ['JetBrains Mono', 'Menlo', 'monospace'],
+            }
+          },
+        },
+      }
+    </script>
     <style>
-      /* Custom Scrollbar for Cyberpunk Feel */
+      :root {
+        /* Default Dark Mode (Cyberpunk) */
+        --background: #050505;
+        --card: #0a0a0a;
+        --text: #f8fafc;
+        --border: rgba(255, 255, 255, 0.1);
+      }
+
+      /* Light Mode (Lab Style) */
+      .light {
+        --background: #f0f2f5;
+        --card: #ffffff;
+        --text: #0f172a;
+        --border: #e2e8f0;
+      }
+
+      body {
+        background-color: var(--background);
+        color: var(--text);
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      /* Custom Scrollbar */
       ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+        width: 4px;
+        height: 4px;
       }
       ::-webkit-scrollbar-track {
-        background: #0f172a; 
+        background: transparent; 
       }
       ::-webkit-scrollbar-thumb {
         background: #334155; 
-        border-radius: 4px;
+        border-radius: 2px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #475569; 
+        background: #00d4ff; 
       }
     </style>
   <script type="importmap">
@@ -27,6 +78,7 @@
   "imports": {
     "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
     "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "framer-motion": "https://aistudiocdn.com/framer-motion@^11.13.1",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
@@ -35,7 +87,7 @@
 }
 </script>
 </head>
-  <body class="bg-slate-950 text-slate-50 antialiased overflow-hidden">
+  <body class="antialiased overflow-hidden selection:bg-pulse selection:text-black">
     <div id="root"></div>
   </body>
 </html>

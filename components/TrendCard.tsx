@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { TrendItem } from '../types';
-import { TrendingUp, Twitter, Linkedin, Video, MessageCircle, Instagram } from 'lucide-react';
-import { AreaChart, Area, ResponsiveContainer } from 'recharts';
+import { TrendingUp, TrendingDown, Minus, Twitter, Linkedin, Video, MessageCircle, Instagram } from 'lucide-react';
+import { TrendLine } from './effects/TrendLine';
+import { BreathingCard } from './effects/BreathingCard';
 
 interface Props {
   trend: TrendItem;
@@ -10,79 +10,90 @@ interface Props {
   isSelected: boolean;
 }
 
-const TrendCard: React.FC<Props> = ({ trend, onClick, isSelected }) => {
-  // Format history data for Recharts, guard against undefined history
-  const chartData = (trend.history || []).map((val, i) => ({ i, val }));
-  const isPositive = trend.sentiment === 'positive';
-  const color = isPositive ? '#4ade80' : trend.sentiment === 'negative' ? '#f87171' : '#94a3b8';
+// Cyberpunk Color System Definition
+const COLORS = {
+  PULSE: '#00d4ff', // Positive / Cyan
+  SPARK: '#ff6b35', // Negative / Orange-Red
+  ALPHA: '#ffd700', // Neutral / Gold
+};
 
-  // Guard against undefined platforms
-  const platforms = Array.isArray(trend.platforms) ? trend.platforms : [];
+const TrendCard: React.FC<Props> = ({ trend, onClick, isSelected }) => {
+  // 1. Color Logic
+  let themeColor = COLORS.ALPHA;
+  if (trend.sentiment === 'positive') themeColor = COLORS.PULSE;
+  if (trend.sentiment === 'negative') themeColor = COLORS.SPARK;
+
+  // 2. Icon Helper
+  const renderPlatformIcon = (p: string) => {
+    const lower = (p || '').toLowerCase();
+    const props = { size: 12, className: "text-slate-500" };
+    
+    if (lower.includes('twitter') || lower.includes('x')) return <Twitter key={p} {...props} />;
+    if (lower.includes('linkedin')) return <Linkedin key={p} {...props} />;
+    if (lower.includes('tiktok')) return <Video key={p} {...props} />;
+    if (lower.includes('instagram') || lower.includes('ig')) return <Instagram key={p} {...props} />;
+    return <MessageCircle key={p} {...props} />;
+  };
 
   return (
-    <div 
+    <BreathingCard
       onClick={() => onClick(trend)}
-      className={`
-        relative p-4 rounded-xl border cursor-pointer transition-all duration-300 group overflow-hidden
-        ${isSelected 
-            ? 'bg-blue-900/20 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]' 
-            : 'bg-slate-800/50 border-slate-700 hover:border-slate-500 hover:bg-slate-800'}
-      `}
+      theme={themeColor}
+      intensity={isSelected ? 'strong' : 'low'}
+      className="mb-3 group min-h-[140px]"
     >
-      <div className="flex justify-between items-start mb-2 relative z-10">
-        <span className="text-xs font-semibold text-blue-400 uppercase tracking-wider">{trend.category}</span>
-        <div className={`flex items-center gap-1 text-xs font-bold ${isPositive ? 'text-green-400' : trend.sentiment === 'negative' ? 'text-red-400' : 'text-slate-400'}`}>
-           {isPositive ? '▲' : trend.sentiment === 'negative' ? '▼' : '●'} {trend.velocity}%
+      {/* Decorative Cyberpunk Corner */}
+      <div 
+        className="absolute top-0 right-0 w-3 h-3 border-t border-r opacity-60 transition-colors" 
+        style={{ borderColor: themeColor }} 
+      />
+
+      {/* Header: Category & Velocity */}
+      <div className="flex justify-between items-start mb-2">
+        <span 
+          className="text-[9px] font-bold uppercase tracking-[0.2em] font-mono" 
+          style={{ color: themeColor }}
+        >
+          {trend.category}
+        </span>
+        <div 
+          className="flex items-center gap-1.5 text-[10px] font-mono font-bold bg-black/50 px-1.5 py-0.5 rounded border border-slate-800"
+          style={{ color: themeColor, borderColor: isSelected ? themeColor : undefined }}
+        >
+          {trend.sentiment === 'positive' && <TrendingUp size={10} />}
+          {trend.sentiment === 'negative' && <TrendingDown size={10} />}
+          {trend.sentiment === 'neutral' && <Minus size={10} />}
+          {Math.abs(trend.velocity)}%
         </div>
       </div>
-      
-      <h3 className="text-lg font-bold text-white mb-2 leading-tight group-hover:text-blue-300 transition-colors relative z-10">
+
+      {/* Body: Topic */}
+      <h3 className="text-sm font-bold text-slate-100 mb-1 leading-snug font-mono group-hover:text-white transition-colors">
         {trend.topic}
       </h3>
       
-      <p className="text-slate-400 text-sm mb-4 line-clamp-2 relative z-10">
+      {/* Summary */}
+      <p className="text-[10px] text-slate-500 mb-6 line-clamp-2 border-l border-slate-800 pl-2">
         {trend.summary}
       </p>
 
-      {/* Sparkline Chart */}
-      <div className="absolute bottom-0 left-0 right-0 h-16 opacity-20 pointer-events-none group-hover:opacity-30 transition-opacity">
-        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-          <AreaChart data={chartData}>
-             <defs>
-                <linearGradient id={`grad-${trend.id}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={color} stopOpacity={0.5}/>
-                    <stop offset="95%" stopColor={color} stopOpacity={0}/>
-                </linearGradient>
-            </defs>
-            <Area 
-                type="monotone" 
-                dataKey="val" 
-                stroke={color} 
-                strokeWidth={2} 
-                fill={`url(#grad-${trend.id})`} 
-                isAnimationActive={false} 
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+      {/* Chart: TrendLine Upgrade */}
+      {/* Positioned absolutely at bottom for that "data underlay" look */}
+      <div className="absolute bottom-0 left-0 right-0 h-16 opacity-30 pointer-events-none mix-blend-screen">
+        <TrendLine data={trend.history || []} color={themeColor} />
       </div>
 
-      <div className="flex justify-between items-center border-t border-slate-700/50 pt-3 relative z-10">
-        <div className="flex gap-2">
-            {platforms.map(p => {
-                const lowerP = (p || '').toLowerCase();
-                if (lowerP.includes('twitter') || lowerP.includes('x')) return <Twitter key={p} size={14} className="text-slate-400" />;
-                if (lowerP.includes('linkedin')) return <Linkedin key={p} size={14} className="text-slate-400" />;
-                if (lowerP.includes('tiktok')) return <Video key={p} size={14} className="text-slate-400" />;
-                if (lowerP.includes('instagram') || lowerP.includes('ig')) return <Instagram key={p} size={14} className="text-slate-400" />;
-                return <MessageCircle key={p} size={14} className="text-slate-400" />;
-            })}
+      {/* Footer: Platforms & Volume */}
+      <div className="flex justify-between items-end mt-auto border-t border-slate-800/50 pt-2 relative z-10">
+        <div className="flex gap-1.5">
+          {(trend.platforms || []).map(renderPlatformIcon)}
         </div>
-        <div className="flex items-center gap-1 text-xs text-slate-500 bg-slate-900/80 px-2 py-0.5 rounded-full border border-slate-800">
-            <TrendingUp size={12} />
-            <span>{trend.volume.toLocaleString()}</span>
+        <div className="flex items-center gap-1 text-[10px] font-mono text-slate-400">
+          <TrendingUp size={10} style={{ color: themeColor }} />
+          <span>{(trend.volume / 1000).toFixed(1)}k</span>
         </div>
       </div>
-    </div>
+    </BreathingCard>
   );
 };
 

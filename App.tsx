@@ -1,220 +1,417 @@
-import React, { useState, useEffect } from 'react';
-import { TrendItem, DataStreamStatus } from './types';
-import { INITIAL_TRENDS, CATEGORIES } from './constants';
-import { fetchLiveTrends, checkApiKey } from './services/geminiService';
-import StreamStatus from './components/StreamStatus';
-import TrendCard from './components/TrendCard';
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { TrendItem } from './types';
+import { checkApiKey, searchGlobalTrends, getSearchSuggestions } from './services/geminiService';
+import TrendListItem from './components/TrendListItem';
 import AnalysisPanel from './components/AnalysisPanel';
-import { Radar, RefreshCw, BarChart3, AlertCircle } from 'lucide-react';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { AnimatedBackground } from './components/layout/AnimatedBackground';
+import { IntroLoader } from './components/layout/IntroLoader';
+import { TRANSLATIONS } from './i18n';
+import { 
+    Flame, BrainCircuit, AlertTriangle, Ghost, Search, Zap, 
+    Twitter, Linkedin, Video, MessageCircle, Youtube, Globe, LayoutGrid, 
+    Instagram, Facebook, Moon, Sun, Languages, ArrowUpLeft, RefreshCw, Loader2
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// --- CONFIG ---
+
+type Lang = 'en' | 'zh';
+type Theme = 'dark' | 'light';
+
+const DISCOVERY_QUERIES = [
+    "Viral TikTok Filters", "Instagram Aesthetic Trends", "Cosplay Photography", 
+    "AI Video Generation Tools", "Cinematic Portrait Styles", "Streetwear Fashion Trends", 
+    "Cyberpunk Art Styles", "Retro Anime Aesthetics", "Surrealist AI Art", "Fantasy Character Design"
+];
+
+const getPlatforms = (t: any) => [
+    { id: 'ALL', label: t.tabAll, icon: LayoutGrid, color: 'text-text' },
+    { id: 'X', label: t.twitter, icon: Twitter, color: 'text-text' }, 
+    { id: 'TIKTOK', label: t.tiktok, icon: Video, color: 'text-[#ff0050]' },
+    { id: 'REDDIT', label: t.reddit, icon: MessageCircle, color: 'text-[#ff4500]' },
+    { id: 'LINKEDIN', label: t.linkedin, icon: Linkedin, color: 'text-[#0077b5]' },
+    { id: 'YOUTUBE', label: t.youtube, icon: Youtube, color: 'text-[#ff0000]' },
+    { id: 'INSTAGRAM', label: t.instagram, icon: Instagram, color: 'text-[#e1306c]' },
+    { id: 'FACEBOOK', label: t.facebook, icon: Facebook, color: 'text-[#1877f2]' },
+];
 
 const App: React.FC = () => {
-  const [trends, setTrends] = useState<TrendItem[]>(INITIAL_TRENDS);
+  const [loadingApp, setLoadingApp] = useState(true);
+  const [isDataReady, setIsDataReady] = useState(false);
+  
+  const [trends, setTrends] = useState<TrendItem[]>([]);
   const [selectedTrend, setSelectedTrend] = useState<TrendItem | null>(null);
-  const [activeCategory, setActiveCategory] = useState(CATEGORIES[0]);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [streamStatus, setStreamStatus] = useState(DataStreamStatus.CONNECTED);
+  const [isScanning, setIsScanning] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasKey, setHasKey] = useState(true);
   
-  // Live Chart State
-  const [chartData, setChartData] = useState<{ time: string; value: number }[]>([]);
+  // App State
+  const [activePlatform, setActivePlatform] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null); // For Scroll Detection
 
-  // Check API key on mount
+  const [lang, setLang] = useState<Lang>('en');
+  const [theme, setTheme] = useState<Theme>('dark');
+
+  const t = TRANSLATIONS[lang];
+  const PLATFORMS = getPlatforms(t);
+
   useEffect(() => {
     setHasKey(checkApiKey());
-    setStreamStatus(DataStreamStatus.INGESTING);
-  }, []);
-
-  // Initialize and simulate live chart data (Rolling 1-hour window)
-  useEffect(() => {
-    const generateInitialData = () => {
-        const now = Date.now();
-        const data = [];
-        let baseValue = 4500;
-        
-        // Generate 60 points (1 hour history)
-        for (let i = 60; i >= 0; i--) {
-            const t = now - i * 60 * 1000;
-            // Random walk simulation
-            baseValue = Math.max(1000, Math.min(9000, baseValue + (Math.random() - 0.5) * 800));
-            data.push({
-                time: new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                value: Math.round(baseValue)
-            });
-        }
-        return data;
+    document.documentElement.classList.add('dark');
+    
+    // Initial Load
+    const initData = async () => {
+        await handleSearch("Trending Visual Styles AI Filters"); 
+        setIsDataReady(true);
     };
 
-    setChartData(generateInitialData());
-
-    const interval = setInterval(() => {
-        setChartData(prev => {
-            const last = prev[prev.length - 1];
-            let newVal = last.value + (Math.random() - 0.5) * 1200; // Volatility
-            newVal = Math.max(1200, Math.min(9500, newVal)); // Clamp
-            
-            const nextTime = new Date();
-            const newItem = {
-                time: nextTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                value: Math.round(newVal)
-            };
-            
-            // Remove first, add new (Keep window constant)
-            return [...prev.slice(1), newItem];
-        });
-    }, 2000); // Update every 2 seconds
-
-    return () => clearInterval(interval);
+    initData();
   }, []);
 
-  const handleRefresh = async () => {
-    if (!hasKey) return;
-    setIsRefreshing(true);
-    setStreamStatus(DataStreamStatus.INGESTING);
-    
-    try {
-      // Simulate "Connect to Kafka Topic"
-      const newTrends = await fetchLiveTrends(activeCategory);
-      if (newTrends.length > 0) {
-        setTrends(prev => {
-            // Merge new trends at the top
-            const combined = [...newTrends, ...prev].slice(0, 50); // Keep buffer size manageable
-            return combined;
-        });
+  // --- AUTOCOMPLETE LOGIC ---
+  useEffect(() => {
+      const fetchSuggestions = async () => {
+          if (searchQuery.length >= 2) {
+              const results = await getSearchSuggestions(searchQuery);
+              setSuggestions(results);
+              setShowSuggestions(true);
+          } else {
+              setSuggestions([]);
+              setShowSuggestions(false);
+          }
+      };
+
+      const timer = setTimeout(fetchSuggestions, 300); // 300ms debounce
+      return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const toggleTheme = () => {
+      if (theme === 'dark') {
+          setTheme('light');
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+      } else {
+          setTheme('dark');
+          document.documentElement.classList.remove('light');
+          document.documentElement.classList.add('dark');
       }
-    } catch (e) {
-      console.error(e);
-      setStreamStatus(DataStreamStatus.DISCONNECTED);
-    } finally {
-      setIsRefreshing(false);
-    }
   };
 
-  // Filter trends based on active category
-  const filteredTrends = trends.filter(t => t.category === activeCategory);
+  const toggleLang = () => {
+      setLang(prev => prev === 'en' ? 'zh' : 'en');
+  };
+
+  const handleSearch = async (query: string) => {
+      setShowSuggestions(false); // Hide suggestions immediately
+      setIsScanning(true);
+      if (query !== searchQuery) setTrends([]); 
+      setSelectedTrend(null);
+      try {
+          const results = await searchGlobalTrends(query);
+          setTrends(results);
+          if (results.length > 0) setSelectedTrend(results[0]);
+      } catch (e) {
+          console.error(e);
+      } finally {
+          setIsScanning(false);
+      }
+  };
+
+  // NEW: Load More Logic
+  const handleLoadMore = async () => {
+      if (isLoadingMore || isScanning) return;
+      setIsLoadingMore(true);
+      
+      // Pick a random discovery query to keep it fresh and visual-biased
+      const randomQuery = DISCOVERY_QUERIES[Math.floor(Math.random() * DISCOVERY_QUERIES.length)];
+      
+      try {
+          const newResults = await searchGlobalTrends(randomQuery);
+          // Append new results, filtering out potential duplicates by ID
+          setTrends(prev => {
+              const existingIds = new Set(prev.map(t => t.id));
+              const uniqueNew = newResults.filter(t => !existingIds.has(t.id));
+              return [...prev, ...uniqueNew];
+          });
+      } catch (e) {
+          console.error("Failed to load more trends", e);
+      } finally {
+          setIsLoadingMore(false);
+      }
+  };
+
+  // NEW: Scroll Listener
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+      const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+      // Trigger when within 10px of bottom to be more responsive
+      if (scrollHeight - scrollTop <= clientHeight + 10) {
+          handleLoadMore();
+      }
+  }, [isLoadingMore, isScanning]);
+
+  const handleManualSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      if(searchQuery.trim()) handleSearch(searchQuery);
+  };
+
+  const selectSuggestion = (s: string) => {
+      setSearchQuery(s);
+      handleSearch(s);
+  };
+
+  // Filter Logic
+  const filteredTrends = trends.filter(t => {
+      if (activePlatform === 'ALL') return true;
+      return t.platforms.some(p => p.toUpperCase().includes(activePlatform));
+  });
+
+  const trendingNow = filteredTrends.filter(t => (t.trendScore || 0) > 60).slice(0, 10); // Show more items
+  const risks = filteredTrends.filter(t => t.riskLevel === 'high' || t.sentiment === 'negative');
+  const agents = filteredTrends.filter(t => (t.trendScore || 0) > 75 && !risks.includes(t)); 
 
   return (
-    <div className="flex flex-col h-screen bg-slate-950 text-slate-100 font-sans">
+    <div className={`flex flex-col h-screen bg-background font-sans text-text overflow-hidden relative transition-colors duration-300`}>
       
-      {/* Top Warning if no Key */}
-      {!hasKey && (
-          <div className="bg-red-500/10 text-red-500 px-4 py-2 text-sm text-center border-b border-red-500/20 flex items-center justify-center gap-2">
-            <AlertCircle size={14} />
-            <span>Missing API_KEY. Please set process.env.API_KEY to use Gemini features.</span>
-          </div>
-      )}
-
-      {/* 1. Header & Status Bar */}
-      <header className="h-14 border-b border-slate-800 bg-slate-900/80 backdrop-blur flex items-center justify-between px-6 sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <div className="bg-blue-600 p-1.5 rounded-lg shadow-lg shadow-blue-500/20">
-            <Radar size={20} className="text-white" />
-          </div>
-          <h1 className="font-bold text-lg tracking-tight">TrendPulse<span className="text-blue-500">AI</span></h1>
-        </div>
-        
-        {/* Category Selector */}
-        <div className="flex bg-slate-800/50 p-1 rounded-lg border border-slate-700 overflow-x-auto max-w-[60vw]">
-            {CATEGORIES.map(cat => (
-                <button 
-                    key={cat}
-                    onClick={() => { setActiveCategory(cat); setSelectedTrend(null); }}
-                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all whitespace-nowrap ${activeCategory === cat ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-300'}`}
-                >
-                    {cat}
-                </button>
-            ))}
-        </div>
-      </header>
-
-      {/* 2. Stream Visualization Bar */}
-      <StreamStatus status={streamStatus} />
-
-      {/* 3. Main Content Grid */}
-      <div className="flex-1 flex overflow-hidden">
-        
-        {/* Left: Trend Stream */}
-        <div className="flex-1 flex flex-col min-w-[320px] max-w-2xl border-r border-slate-800 bg-slate-950/50">
-            
-            {/* Controls */}
-            <div className="p-4 flex justify-between items-center border-b border-slate-800/50">
-                <div className="flex items-center gap-2 text-slate-400">
-                    <BarChart3 size={16} />
-                    <span className="text-sm font-medium">Topic Velocity Stream</span>
+      {/* GLOBAL LOADING SCREEN */}
+      <AnimatePresence>
+          {loadingApp && (
+              <IntroLoader 
+                  isDataReady={isDataReady} 
+                  onComplete={() => setLoadingApp(false)} 
+              />
+          )}
+      </AnimatePresence>
+      
+      <AnimatedBackground theme={theme} />
+      
+      {/* --- TOP BAR --- */}
+      <div className="h-16 flex items-center justify-between px-6 border-b border-border bg-card/90 backdrop-blur-md z-30 shrink-0 shadow-sm">
+          {/* Brand */}
+          <div className="flex items-center gap-3 w-[250px]">
+                <div className="w-8 h-8 bg-pulse/20 rounded flex items-center justify-center border border-pulse/30">
+                    <Zap size={18} className="text-pulse fill-pulse" />
                 </div>
+                <div>
+                    <h1 className="text-lg font-black text-text tracking-tighter leading-none">{t.appTitle}</h1>
+                    <span className="text-[8px] font-mono text-slate-500 tracking-[0.3em] uppercase block mt-0.5">{t.appSubtitle}</span>
+                </div>
+           </div>
+
+           {/* Social Filter Icons */}
+           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-[50vw]">
+               {PLATFORMS.map((p) => (
+                   <button
+                       key={p.id}
+                       onClick={() => setActivePlatform(p.id)}
+                       className={`
+                           flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 shrink-0
+                           ${activePlatform === p.id 
+                                ? 'bg-black/10 dark:bg-white/10 border-pulse text-text shadow-sm' 
+                                : 'bg-transparent border-transparent text-slate-500 hover:text-text hover:bg-black/5 dark:hover:bg-white/5'
+                           }
+                       `}
+                   >
+                       <p.icon size={14} className={activePlatform === p.id ? p.color : 'currentColor'} />
+                       <span className={`text-[10px] font-bold uppercase ${activePlatform === p.id ? 'block' : 'hidden xl:block'}`}>
+                           {p.label}
+                       </span>
+                   </button>
+               ))}
+           </div>
+
+           {/* Settings & Status */}
+           <div className="w-[250px] flex justify-end items-center gap-4">
+                {/* NEW: Refresh Button */}
                 <button 
-                    onClick={handleRefresh}
-                    disabled={isRefreshing || !hasKey}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-md transition-all shadow-[0_0_10px_rgba(37,99,235,0.3)]"
+                    onClick={handleLoadMore} 
+                    disabled={isLoadingMore}
+                    className="p-2 rounded-full hover:bg-white/5 text-slate-500 hover:text-pulse transition-colors relative"
+                    title="Refresh Data"
                 >
-                    <RefreshCw size={12} className={isRefreshing ? 'animate-spin' : ''} />
-                    {isRefreshing ? 'SYNCING...' : 'REFRESH STREAM'}
+                    <RefreshCw size={16} className={isLoadingMore ? "animate-spin text-pulse" : ""} />
                 </button>
-            </div>
 
-            {/* Visual: Velocity Chart (Rolling 1h Window) */}
-            <div className="h-48 w-full bg-slate-900/30 border-b border-slate-800/50 relative group overflow-hidden">
-                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
-                 <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                    <AreaChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                        <defs>
-                            <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
-                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                            </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" />
-                        <Tooltip 
-                            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} 
-                            itemStyle={{ color: '#94a3b8', fontSize: '12px' }}
-                            labelStyle={{ color: '#64748b', fontSize: '10px', marginBottom: '4px' }}
-                        />
-                        <Area 
-                            type="monotone" 
-                            dataKey="value" 
-                            stroke="#3b82f6" 
-                            strokeWidth={2}
-                            fillOpacity={1} 
-                            fill="url(#colorVal)" 
-                            isAnimationActive={false} // Disable animation for smoother streaming feel
-                        />
-                    </AreaChart>
-                 </ResponsiveContainer>
-                 <div className="absolute top-3 left-3 flex items-center gap-2">
-                     <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-900/80 border border-slate-700/50 backdrop-blur-sm">
-                         <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                         <span className="text-[10px] text-slate-400 font-mono font-medium">LIVE INGESTION</span>
-                     </div>
-                     <span className="text-[10px] text-slate-500 font-mono">Global Event Volume (1h)</span>
-                 </div>
-            </div>
+                <div className="flex items-center gap-2 border-l border-border pl-4">
+                    <button onClick={toggleLang} className="text-slate-500 hover:text-text transition-colors">
+                        <Languages size={16} />
+                    </button>
+                    <button onClick={toggleTheme} className="text-slate-500 hover:text-text transition-colors">
+                        {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+                    </button>
+                </div>
 
-            {/* List */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {filteredTrends.length > 0 ? (
-                    filteredTrends.map(trend => (
-                        <TrendCard 
-                            key={trend.id} 
-                            trend={trend} 
-                            onClick={setSelectedTrend} 
-                            isSelected={selectedTrend?.id === trend.id}
-                        />
-                    ))
+                {isScanning ? (
+                    <div className="flex items-center gap-2 text-xs font-mono text-pulse animate-pulse">
+                        <Globe size={14} className="animate-spin" />
+                        <span className="hidden lg:inline">{t.statusScanning}</span>
+                    </div>
                 ) : (
-                    <div className="text-center py-10 text-slate-500">
-                        <p>No trends found for {activeCategory}.</p>
-                        <p className="text-xs mt-2">Click "Refresh Stream" to fetch live data via Gemini.</p>
+                    <div className="flex items-center gap-2 text-[10px] font-mono text-slate-600 dark:text-slate-500">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                        <span className="hidden lg:inline">{t.statusLive}</span>
                     </div>
                 )}
+           </div>
+      </div>
+
+      {/* --- MAIN WORKSPACE --- */}
+      <div className="flex-1 flex overflow-hidden z-10 pb-20"> 
+        
+        {/* LEFT: Feed */}
+        <div 
+            className="w-[380px] min-w-[380px] border-r border-border bg-card/80 backdrop-blur-sm h-full flex flex-col transition-colors"
+        >
+            <div className="p-3 border-b border-border bg-black/5 dark:bg-black/20 flex justify-between items-center">
+                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">
+                    Signals: {activePlatform}
+                </span>
+                <span className="text-[10px] font-mono text-pulse">
+                    {filteredTrends.length} {t.signalsDetected}
+                </span>
+            </div>
+
+            <div 
+                ref={listRef}
+                onScroll={handleScroll}
+                className="flex-1 overflow-y-auto p-4 space-y-8 no-scrollbar pb-32"
+            >
+                {filteredTrends.length === 0 && !isScanning ? (
+                    <div className="flex flex-col items-center justify-center h-60 text-center opacity-50">
+                        <Ghost size={32} className="mb-3 text-slate-400" />
+                        <p className="text-xs font-mono text-slate-500">{t.noSignals}</p>
+                    </div>
+                ) : (
+                    <>
+                        <section>
+                            <div className="flex items-center gap-2 mb-3 px-1">
+                                <Flame size={14} className="text-[#ff6b35]" />
+                                <h3 className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{t.sectionTrending}</h3>
+                            </div>
+                            <div className="space-y-1">
+                                {trendingNow.map(t => (
+                                    <TrendListItem key={t.id} trend={t} variant="trending" onClick={setSelectedTrend} isSelected={selectedTrend?.id === t.id} />
+                                ))}
+                            </div>
+                        </section>
+                        
+                        {agents.length > 0 && (
+                            <section>
+                                <div className="flex items-center gap-2 mb-3 px-1 pt-2 border-t border-border">
+                                    <BrainCircuit size={14} className="text-pulse" />
+                                    <h3 className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{t.sectionOpportunity}</h3>
+                                </div>
+                                <div className="space-y-1">
+                                    {agents.map(t => (
+                                        <TrendListItem key={`ag-${t.id}`} trend={t} variant="agent" onClick={setSelectedTrend} isSelected={selectedTrend?.id === t.id} />
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
+                        {risks.length > 0 && (
+                            <section>
+                                <div className="flex items-center gap-2 mb-3 px-1 pt-2 border-t border-border">
+                                    <AlertTriangle size={14} className="text-yellow-500" />
+                                    <h3 className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{t.sectionRisk}</h3>
+                                </div>
+                                <div className="space-y-1">
+                                    {risks.map(t => (
+                                        <TrendListItem key={`rk-${t.id}`} trend={t} variant="risk" onClick={setSelectedTrend} isSelected={selectedTrend?.id === t.id} />
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+                        
+                        {/* Loading More Indicator */}
+                        {isLoadingMore && (
+                            <div className="py-4 flex justify-center text-pulse animate-pulse">
+                                <Loader2 size={20} className="animate-spin" />
+                            </div>
+                        )}
+                    </>
+                )}
+                 <div className="h-12" />
             </div>
         </div>
 
-        {/* Right: Analysis Engine */}
-        <div className="flex-[1.5] relative">
-            <AnalysisPanel trend={selectedTrend} />
+        {/* RIGHT: Analysis */}
+        <div className="flex-1 h-full bg-background relative overflow-hidden transition-colors">
+            <AnalysisPanel trend={selectedTrend} t={t} />
         </div>
 
       </div>
+
+      {/* --- FLOATING COMMAND BAR (BOTTOM) --- */}
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-3xl z-50 px-4">
+          <motion.div 
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="relative group"
+          >
+              {/* SUGGESTIONS DROPDOWN (Pops UP) */}
+              <AnimatePresence>
+                {showSuggestions && suggestions.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute bottom-full mb-3 left-0 right-0 bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xl overflow-hidden p-1 z-50"
+                    >
+                        <div className="px-3 py-2 border-b border-border/50 flex items-center justify-between">
+                             <span className="text-[10px] font-mono text-pulse uppercase tracking-wider">Visual Intelligence Suggestions</span>
+                             <span className="text-[9px] text-slate-500">Gemini Flash-Lite</span>
+                        </div>
+                        {suggestions.map((s, i) => (
+                            <button
+                                key={i}
+                                onClick={() => selectSuggestion(s)}
+                                className="w-full text-left px-4 py-2.5 hover:bg-pulse/10 hover:text-pulse text-sm text-text transition-colors flex items-center gap-3 group/item"
+                            >
+                                <ArrowUpLeft size={12} className="text-slate-500 group-hover/item:text-pulse" />
+                                {s}
+                            </button>
+                        ))}
+                    </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Glow Effect */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-pulse via-purple-500 to-spark rounded-full opacity-30 dark:opacity-30 group-focus-within:opacity-70 blur-md transition-opacity duration-500 hidden dark:block" />
+              
+              <form onSubmit={handleManualSubmit} className="relative bg-card/90 backdrop-blur-xl border border-border rounded-full flex items-center p-2 shadow-2xl transition-all duration-300 focus-within:ring-1 focus-within:ring-pulse/50">
+                  <div className="pl-4 pr-3 text-slate-400">
+                      {isScanning ? <Zap size={20} className="animate-pulse text-pulse" /> : <Search size={20} className="group-focus-within:text-pulse transition-colors" />}
+                  </div>
+                  <input 
+                      ref={searchInputRef}
+                      type="text" 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder={t.scanPlaceholder}
+                      className="flex-1 bg-transparent border-none outline-none text-text font-mono text-sm h-10 placeholder:text-slate-500"
+                      autoComplete="off"
+                  />
+                  <div className="flex items-center gap-2 pr-2">
+                      <span className="hidden md:block text-[10px] font-mono text-slate-500 border border-border px-2 py-1 rounded">
+                          ⏎ ENTER
+                      </span>
+                      <button 
+                        type="submit"
+                        disabled={isScanning}
+                        className="bg-pulse hover:bg-pulse/80 text-black rounded-full p-2 transition-colors disabled:opacity-50"
+                      >
+                          <Zap size={18} fill="currentColor" />
+                      </button>
+                  </div>
+              </form>
+          </motion.div>
+      </div>
+
     </div>
   );
 };

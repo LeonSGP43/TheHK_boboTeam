@@ -19,28 +19,33 @@ const StreamStatus: React.FC<Props> = ({ status }) => {
   }, [status]);
 
   return (
-    <div className="bg-slate-900 border-b border-slate-800 p-2 flex items-center justify-between text-xs text-slate-400 font-mono">
+    <div className="bg-black border-b border-slate-900 p-2 flex items-center justify-between text-xs text-slate-500 font-mono">
         <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-                <Server size={14} className="text-blue-500" />
-                <span>Source: Social Firehose</span>
+                <Server size={14} className="text-slate-400" />
+                <span>FIREHOSE_V1</span>
             </div>
-            <ArrowRight size={12} className="text-slate-600 animate-pulse" />
+            <ArrowRight size={12} className="text-slate-700 animate-pulse" />
             <div className="flex items-center gap-2">
-                <Database size={14} className="text-purple-500" />
-                <span className="font-bold text-purple-400">Confluent Kafka</span>
-                <span className="bg-purple-900/50 text-purple-300 px-1 rounded">{packetCount.toLocaleString()} events</span>
+                <Database size={14} style={{ color: '#00d4ff' }} />
+                <span className="font-bold text-slate-300">KAFKA_CLUSTER</span>
+                <span className="bg-[#00d4ff]/10 text-[#00d4ff] px-1 rounded">{packetCount.toLocaleString()} events</span>
             </div>
-            <ArrowRight size={12} className="text-slate-600 animate-pulse" />
+            <ArrowRight size={12} className="text-slate-700 animate-pulse" />
             <div className="flex items-center gap-2">
-                <Activity size={14} className="text-green-500" />
-                <span>Gemini Analysis Agent</span>
+                <Activity size={14} style={{ color: '#ffd700' }} />
+                <span>GEMINI_NEURAL</span>
             </div>
         </div>
         
         <div className="flex items-center gap-2">
-            <span className={`h-2 w-2 rounded-full ${status === DataStreamStatus.INGESTING ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
-            <span>{status === DataStreamStatus.INGESTING ? 'STREAM ACTIVE' : 'STREAM PAUSED'}</span>
+            <span 
+                className={`h-2 w-2 rounded-full ${status === DataStreamStatus.INGESTING ? 'animate-pulse' : ''}`}
+                style={{ backgroundColor: status === DataStreamStatus.INGESTING ? '#00d4ff' : '#ff6b35' }}
+            ></span>
+            <span style={{ color: status === DataStreamStatus.INGESTING ? '#00d4ff' : '#ff6b35' }}>
+                {status === DataStreamStatus.INGESTING ? 'LINK_ESTABLISHED' : 'LINK_OFFLINE'}
+            </span>
         </div>
     </div>
   );
