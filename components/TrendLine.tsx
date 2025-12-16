@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 
@@ -6,7 +7,9 @@ interface Props {
   color: string; // Hex code
 }
 
-const TrendLine: React.FC<Props> = ({ data, color }) => {
+const TrendLine: React.FC<Props> = ({ data = [], color }) => {
+  if (!data || data.length === 0) return null;
+
   // Format history data for Recharts
   const chartData = data.map((val, i) => ({ i, val }));
   

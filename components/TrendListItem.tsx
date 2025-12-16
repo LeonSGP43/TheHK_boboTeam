@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { TrendItem } from '../types';
-import { Twitter, Linkedin, Video, MessageCircle, Instagram, Zap, AlertTriangle, ShieldAlert, Facebook } from 'lucide-react';
+import { Twitter, Linkedin, Video, MessageCircle, Instagram, Zap, ShieldAlert, Facebook, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface Props {
@@ -12,132 +12,102 @@ interface Props {
 }
 
 const COLORS = {
-  PULSE: '#00d4ff',
-  SPARK: '#ff6b35',
-  ALPHA: '#ffd700',
-  SURGE: '#a855f7'
+  PULSE: '#00F0FF',
+  SPARK: '#FF7E5F',
+  SURGE: '#BD00FF'
 };
 
 const TrendListItem: React.FC<Props> = ({ trend, variant, onClick, isSelected }) => {
   
-  // Icon Helper
   const renderPlatformIcon = (p: string) => {
     const lower = (p || '').toLowerCase();
-    const props = { size: 10, className: "text-slate-400 opacity-70" };
-    
-    if (lower.includes('twitter') || lower.includes('x')) return <Twitter key={p} {...props} />;
+    const props = { size: 12, className: "text-slate-500" };
+    if (lower.includes('x')) return <Twitter key={p} {...props} />;
     if (lower.includes('linkedin')) return <Linkedin key={p} {...props} />;
     if (lower.includes('tiktok')) return <Video key={p} {...props} />;
-    if (lower.includes('instagram') || lower.includes('ig')) return <Instagram key={p} {...props} />;
-    if (lower.includes('facebook') || lower.includes('fb')) return <Facebook key={p} {...props} />;
+    if (lower.includes('instagram')) return <Instagram key={p} {...props} />;
+    if (lower.includes('facebook')) return <Facebook key={p} {...props} />;
     return <MessageCircle key={p} {...props} />;
   };
 
   const baseClasses = `
-    relative p-3 mb-2 rounded border cursor-pointer transition-all duration-300
+    relative p-5 rounded-2xl border cursor-pointer transition-all duration-500
     ${isSelected 
-        ? 'bg-pulse/10 border-pulse/30 dark:bg-white/5 dark:border-pulse/30' 
-        : 'bg-transparent border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:border-black/10 dark:hover:border-white/10'
+        ? 'bg-black/5 dark:bg-white/10 border-black/10 dark:border-white/20 shadow-[0_10px_30px_-5px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_30px_-5px_rgba(0,0,0,0.5)] z-10 translate-x-2' 
+        : 'bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/5 hover:bg-black/10 dark:hover:bg-white/10 hover:border-black/10 dark:hover:border-white/10 hover:translate-x-1'
     }
   `;
 
-  const textColor = isSelected ? 'text-black dark:text-white' : 'text-slate-700 dark:text-slate-200';
-  const subTextColor = 'text-slate-500';
-
   if (variant === 'trending') {
-      const scoreColor = (trend.trendScore || 0) > 80 ? COLORS.SPARK : COLORS.PULSE;
+      const score = trend.trendScore || 0;
+      let scoreColor = '#94a3b8';
+      if (score >= 90) scoreColor = COLORS.SPARK;
+      else if (score >= 75) scoreColor = COLORS.SURGE;
+      else if (score >= 50) scoreColor = COLORS.PULSE;
+
       return (
         <motion.div 
             onClick={() => onClick(trend)}
-            className={`${baseClasses} flex items-center justify-between group`}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
+            className={baseClasses}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
         >
-            <div className="flex flex-col gap-0.5 max-w-[70%]">
-                <span className={`text-xs font-bold truncate transition-colors ${textColor}`}>
-                    {trend.topic}
-                </span>
-                <div className="flex items-center gap-1.5 mt-1">
-                    <span className="flex gap-1">
-                        {(trend.platforms || []).slice(0, 3).map(renderPlatformIcon)}
-                    </span>
-                    {trend.agentReady && (
-                        <div className="flex items-center gap-0.5 px-1 rounded bg-green-500/10 text-[8px] font-bold text-green-600 dark:text-green-500 border border-green-500/20">
-                            <Zap size={8} /> READY
-                        </div>
-                    )}
-                </div>
+            <div className="flex justify-between items-center mb-3">
+                 <div className="flex gap-2">
+                    {(trend.platforms || []).slice(0, 3).map(renderPlatformIcon)}
+                 </div>
+                 {trend.agentReady && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]" />
+                 )}
             </div>
-            <div className="text-right">
-                <div className="text-lg font-black font-mono leading-none" style={{ color: scoreColor }}>
-                    {trend.trendScore || 0}
+
+            <h4 className={`text-sm font-bold leading-snug transition-colors mb-4 ${isSelected ? 'text-zinc-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
+                {trend.topic}
+            </h4>
+
+            {/* Capsule Score Bar */}
+            <div className="flex items-center gap-3">
+                <div className="flex-1 h-2 bg-black/10 dark:bg-black/30 rounded-full overflow-hidden shadow-inner border border-black/5 dark:border-white/5">
+                    <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${score}%` }}
+                        className="h-full rounded-full neon-capsule"
+                        style={{ backgroundColor: scoreColor, color: scoreColor }}
+                    />
                 </div>
-                <span className="text-[8px] uppercase font-mono text-slate-400">Score</span>
+                <span className="text-xs font-black font-mono" style={{ color: scoreColor }}>{score}</span>
             </div>
-            {isSelected && <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-pulse" />}
+            
+            {isSelected && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-12 bg-zinc-900 dark:bg-white rounded-r-full shadow-[0_0_15px_rgba(0,0,0,0.2)] dark:shadow-[0_0_15px_white]" />}
         </motion.div>
       );
   }
 
   if (variant === 'agent') {
       return (
-        <motion.div 
-            onClick={() => onClick(trend)}
-            className={`${baseClasses} group`}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-        >
-             <div className="flex justify-between items-start mb-1">
-                <span className={`text-xs font-bold truncate transition-colors ${textColor}`}>
-                    {trend.topic}
-                </span>
+        <motion.div onClick={() => onClick(trend)} className={baseClasses} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+             <div className="flex justify-between items-center mb-2">
+                 <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{trend.agentType || 'TOOL'}</span>
+                 <Zap size={12} className="text-green-500" />
              </div>
-             <div className="flex items-center gap-2">
-                 <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border flex items-center gap-1 ${
-                     trend.agentType === 'portrait' ? 'bg-purple-500/10 text-purple-500 border-purple-500/20' :
-                     trend.agentType === 'filter' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
-                     'bg-slate-500/10 text-slate-500 border-slate-500/20'
-                 }`}>
-                     <Zap size={8} fill="currentColor" />
-                     {trend.agentType || 'TOOL'}
-                 </span>
-                 <span className="text-[8px] text-slate-500 font-mono">
-                     Est. 2d
-                 </span>
-             </div>
-             {isSelected && <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-green-500" />}
+             <h4 className={`text-sm font-bold ${isSelected ? 'text-zinc-900 dark:text-white' : 'text-slate-700 dark:text-slate-200'}`}>{trend.topic}</h4>
+             {isSelected && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-green-500 rounded-r-full shadow-[0_0_10px_#22c55e]" />}
         </motion.div>
       );
   }
 
   if (variant === 'risk') {
     return (
-      <motion.div 
-          onClick={() => onClick(trend)}
-          className={`${baseClasses} group`}
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-      >
-           <div className="flex justify-between items-start mb-1">
-              <span className={`text-xs font-bold truncate transition-colors ${textColor}`}>
-                  {trend.topic}
-              </span>
+      <motion.div onClick={() => onClick(trend)} className={baseClasses} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+           <div className="flex justify-between items-center mb-2">
+               <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">HIGH RISK</span>
+               <ShieldAlert size={12} className="text-red-500" />
            </div>
-           <div className="flex items-center gap-2 mt-1">
-               <div className="flex items-center gap-1 text-[9px] font-mono text-red-500">
-                   <ShieldAlert size={10} />
-                   IP: {trend.riskLevel?.toUpperCase()}
-               </div>
-               <div className="w-px h-3 bg-slate-300 dark:bg-slate-700" />
-               <div className="flex items-center gap-1 text-[9px] font-mono text-orange-500">
-                   <AlertTriangle size={10} />
-                   SAT: {trend.saturation?.toUpperCase()}
-               </div>
-           </div>
-           {isSelected && <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-red-500" />}
+           <h4 className={`text-sm font-bold ${isSelected ? 'text-zinc-900 dark:text-white' : 'text-slate-700 dark:text-slate-200'}`}>{trend.topic}</h4>
+           {isSelected && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-red-500 rounded-r-full shadow-[0_0_10px_#ef4444]" />}
       </motion.div>
     );
-}
+  }
 
   return null;
 };

@@ -3,7 +3,7 @@ export const TRANSLATIONS = {
   en: {
     appTitle: "TREND PULSE",
     appSubtitle: "Intelligence Ops",
-    scanPlaceholder: "Initialize Scan Target (e.g. 'DeepSeek AI', 'Bitcoin')...",
+    scanPlaceholder: "Search for trends, keywords, or creators...",
     statusScanning: "SCANNING NETWORK...",
     statusLive: "LIVE DATA FEED",
     tabIntel: "Intelligence Brief",
@@ -54,7 +54,7 @@ export const TRANSLATIONS = {
   zh: {
     appTitle: "趋势脉搏 AI",
     appSubtitle: "情报作战中心",
-    scanPlaceholder: "输入扫描目标 (如 'DeepSeek', '黑神话', 'AI穿搭')...",
+    scanPlaceholder: "搜索趋势、关键词或创作者...",
     statusScanning: "全网扫描中...",
     statusLive: "实时数据流",
     tabIntel: "情报简报",

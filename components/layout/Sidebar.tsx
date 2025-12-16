@@ -1,75 +1,80 @@
+
 import React from 'react';
-import { LayoutDashboard, Megaphone, Users, Settings, Zap, Database } from 'lucide-react';
+import { LayoutDashboard, Settings, Zap } from 'lucide-react';
 
 interface Props {
   activePath?: string;
 }
 
 export function Sidebar({ activePath = 'dashboard' }: Props) {
+  // Only keeping Mission Control as requested
   const menuItems = [
     { id: 'dashboard', label: 'Mission Control', icon: LayoutDashboard, color: 'text-pulse' },
-    { id: 'campaigns', label: 'Active Ops', icon: Megaphone, color: 'text-spark' },
-    // Removed 'Agents' to focus on Data Dashboard context
-    { id: 'data', label: 'Neural Lake', icon: Database, color: 'text-alpha' },
   ];
 
   return (
-    <aside className="hidden md:flex flex-col w-64 h-full bg-card/50 border-r border-white/5 backdrop-blur-xl relative">
-      {/* Logo Area */}
-      <div className="h-20 flex items-center px-6 border-b border-white/5 relative overflow-hidden group">
-        {/* Ambient Breath Glow */}
-        <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-32 h-32 bg-pulse/10 blur-[50px] rounded-full animate-pulse pointer-events-none" />
-        
-        <div className="relative z-10 flex items-center gap-3">
-            {/* Logo Icon Container */}
-            <div className="p-2 bg-white/5 rounded-lg border border-white/10 shadow-[0_0_15px_rgba(0,212,255,0.1)] backdrop-blur-md group-hover:border-pulse/30 transition-colors duration-500">
-                <Zap className="text-pulse drop-shadow-[0_0_8px_rgba(0,212,255,0.6)] animate-[pulse_3s_ease-in-out_infinite]" size={20} fill="currentColor" fillOpacity={0.1} />
+    <aside className="hidden md:flex flex-col w-72 h-[calc(100vh-4rem)] my-auto ml-6 relative z-20">
+      
+      {/* Container: Floating Glass Bento Box */}
+      <div className="flex-1 glass-high rounded-[2rem] flex flex-col overflow-hidden">
+          
+          {/* Logo Area */}
+          <div className="h-28 flex items-center px-8 border-b border-white/5 relative group">
+            {/* Ambient Glow */}
+            <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-32 h-32 bg-pulse/10 blur-[60px] rounded-full opacity-50 group-hover:opacity-100 transition-opacity duration-1000" />
+            
+            <div className="relative z-10 flex items-center gap-4">
+                {/* 3D-ish Logo Icon */}
+                <div className="p-3 bg-gradient-to-br from-white/10 to-transparent rounded-2xl border border-white/10 shadow-[0_10px_20px_rgba(0,0,0,0.1)] group-hover:shadow-[0_0_25px_rgba(0,240,255,0.4)] transition-all duration-500 backdrop-blur-md">
+                    <Zap className="text-pulse drop-shadow-[0_0_10px_rgba(0,240,255,0.8)]" size={24} fill="currentColor" fillOpacity={0.2} />
+                </div>
+
+                <div className="flex flex-col justify-center">
+                    <span className="text-xl font-black italic tracking-tighter text-white/90 leading-none drop-shadow-sm">
+                        TREND
+                    </span>
+                    <span 
+                        className="text-[10px] font-bold tracking-[0.25em] bg-gradient-to-r from-pulse via-white to-surge text-transparent bg-clip-text"
+                        style={{ backgroundSize: '200% auto' }}
+                    >
+                        PULSE
+                    </span>
+                </div>
             </div>
+          </div>
 
-            {/* Typography */}
-            <div className="flex flex-col justify-center">
-                <span className="text-lg font-black italic tracking-tighter text-white leading-none drop-shadow-md">
-                    TREND
-                </span>
-                <span 
-                    className="text-[10px] font-bold tracking-[0.15em] bg-gradient-to-r from-[#00d4ff] via-[#818cf8] to-[#a855f7] text-transparent bg-clip-text animate-[pulse_4s_ease-in-out_infinite]"
-                    style={{ backgroundSize: '200% auto' }}
-                >
-                    Spot & Creat
-                </span>
-            </div>
-        </div>
-      </div>
+          {/* Navigation with Huge Whitespace */}
+          <nav className="flex-1 py-10 px-6 space-y-4">
+            {menuItems.map((item) => (
+              <button
+                key={item.id}
+                className={`w-full flex items-center px-5 py-4 rounded-2xl text-sm font-medium transition-all duration-300 group relative overflow-hidden ${
+                  activePath === item.id 
+                    ? 'bg-white/10 text-white shadow-[0_10px_30px_-10px_rgba(0,0,0,0.2)] border border-white/10 backdrop-blur-md' 
+                    : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+                }`}
+              >
+                {/* Active Indicator Glow */}
+                {activePath === item.id && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-pulse to-transparent opacity-80" />
+                )}
+                
+                <item.icon 
+                  size={20} 
+                  className={`mr-5 relative z-10 transition-colors ${activePath === item.id ? item.color : 'text-slate-500 group-hover:text-slate-200'}`} 
+                />
+                <span className="font-sans tracking-wide relative z-10 text-sm">{item.label}</span>
+              </button>
+            ))}
+          </nav>
 
-      {/* Navigation */}
-      <nav className="flex-1 py-6 px-3 space-y-1">
-        {menuItems.map((item) => (
-          <button
-            key={item.id}
-            className={`w-full flex items-center px-3 py-3 rounded-lg text-sm font-medium transition-all duration-300 group relative overflow-hidden ${
-              activePath === item.id 
-                ? 'bg-white/5 text-white shadow-[0_0_20px_rgba(0,212,255,0.05)] border border-white/10' 
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            {activePath === item.id && (
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-pulse shadow-[0_0_10px_#00d4ff]" />
-            )}
-            <item.icon 
-              size={18} 
-              className={`mr-3 transition-colors ${activePath === item.id ? item.color : 'text-slate-500 group-hover:text-slate-300'}`} 
-            />
-            <span className="font-mono tracking-wide">{item.label}</span>
-          </button>
-        ))}
-      </nav>
-
-      {/* Bottom Actions */}
-      <div className="p-4 border-t border-white/5">
-        <button className="flex items-center w-full px-3 py-2 text-slate-500 hover:text-white transition-colors">
-          <Settings size={18} className="mr-3" />
-          <span className="text-sm font-mono">SYSTEM_CONFIG</span>
-        </button>
+          {/* Bottom Actions */}
+          <div className="p-8 border-t border-white/5">
+            <button className="flex items-center w-full px-5 py-4 text-slate-500 hover:text-white transition-all hover:bg-white/5 rounded-2xl group border border-transparent hover:border-white/5">
+              <Settings size={20} className="mr-4 group-hover:rotate-90 transition-transform duration-500" />
+              <span className="text-xs font-sans font-bold tracking-widest uppercase">System Config</span>
+            </button>
+          </div>
       </div>
     </aside>
   );

@@ -282,26 +282,26 @@ export const analyzeDeepDive = async (trend: TrendItem): Promise<AnalysisResult>
           });
       }
       
-      // Fallback if guideline is missing
-      if (!data.guideline) {
-          data.guideline = {
-              matchedCategory: "General Trend",
-              coreKeyword: trend.topic,
-              productionSteps: ["Research the topic", "Create engaging visual", "Post with trending audio"],
-              recommendedTools: ["Camera", "Editing App"],
-              commercialPotential: "Medium"
-          };
-      }
+      // Robust Guideline Construction
+      // We ensure nested arrays exist even if AI returns a partial object
+      const rawGuideline = data.guideline || {};
+      const safeGuideline = {
+          matchedCategory: rawGuideline.matchedCategory || "General Trend",
+          coreKeyword: rawGuideline.coreKeyword || trend.topic,
+          productionSteps: Array.isArray(rawGuideline.productionSteps) ? rawGuideline.productionSteps : ["Research the topic", "Create engaging visual", "Post with trending audio"],
+          recommendedTools: Array.isArray(rawGuideline.recommendedTools) ? rawGuideline.recommendedTools : ["Camera", "Editing App"],
+          commercialPotential: rawGuideline.commercialPotential || "Medium"
+      };
   
       return {
         trendId: trend.id,
         deepDive: data.deepDive || "Analysis pending...",
         marketFit: data.marketFit || "General Audience",
-        strategies: data.strategies || [],
-        visualPrompt: data.visualPrompt || `A futuristic, high-quality representation of ${trend.topic}, 4k, trending on artstation`,
+        strategies: Array.isArray(data.strategies) ? data.strategies : [], // Ensure Array
+        visualPrompt: data.visualPrompt || `A highly detailed, photorealistic AI image prompt to generate a perfect example of this trend. Mention lighting, camera angle, and style.`,
         scores: data.scores || { monetization: 50, virality: 50, feasibility: 50, competition: 50 },
         relatedLinks,
-        guideline: data.guideline
+        guideline: safeGuideline
       };
   
     } catch (error) {
@@ -382,6 +382,7 @@ export const runGrowthAnalyticsAgent = async (signals: SocialSignal[]): Promise<
     Input Signals: ${signalsJson}
     Task: Transform signals into dashboard JSON.
     Output JSON Array (TrendReportItem schema).
+    Ensure each item has 'metrics', 'scores', 'risks', 'build_plan' objects populated.
     `;
 
     try {
@@ -390,10 +391,63 @@ export const runGrowthAnalyticsAgent = async (signals: SocialSignal[]): Promise<
             contents: prompt,
             config: { responseMimeType: "application/json" },
         });
-        return cleanAndParseJSON(response.text || "[]", []).map((item: any) => ({
-            ...item,
+        
+        const parsed = cleanAndParseJSON(response.text || "[]", []);
+        if (!Array.isArray(parsed)) return []; // CRITICAL CHECK to prevent .map crashes
+        
+        return parsed.map((item: any) => ({
+            date: item.date || today,
+            window_hours: item.window_hours || 24,
+            platform: item.platform || 'Unknown',
+            keyword: item.keyword || 'Unknown Trend',
+            category: item.category || 'General',
+            metrics: {
+                search_index: item.metrics?.search_index || 0,
+                views: item.metrics?.views || 0,
+                likes: item.metrics?.likes || 0,
+                comments: item.metrics?.comments || 0,
+                shares: item.metrics?.shares || 0,
+                saves: item.metrics?.saves || 0,
+                posts: item.metrics?.posts || 0,
+                prev_views: item.metrics?.prev_views || 0,
+                prev_likes: item.metrics?.prev_likes || 0,
+                prev_comments: item.metrics?.prev_comments || 0,
+                prev_shares: item.metrics?.prev_shares || 0,
+                prev_saves: item.metrics?.prev_saves || 0,
+                prev_posts: item.metrics?.prev_posts || 0,
+            },
+            scores: {
+                H: item.scores?.H || 0,
+                V: item.scores?.V || 0,
+                D: item.scores?.D || 0,
+                F: item.scores?.F || 0,
+                M: item.scores?.M || 0,
+                R: item.scores?.R || 0,
+                trend_score: item.scores?.trend_score || 0,
+            },
+            lifecycle: item.lifecycle || 'emerging',
+            agent_ready: item.agent_ready || false,
+            build_plan: {
+                recommended: item.build_plan?.recommended || false,
+                agent_type: item.build_plan?.agent_type || 'Custom',
+                model_stack: item.build_plan?.model_stack || [],
+                interaction: item.build_plan?.interaction || '',
+                expected_time_to_ship_days: item.build_plan?.expected_time_to_ship_days || 0,
+            },
+            go_to_market: {
+                primary_platform: item.go_to_market?.primary_platform || 'Generic',
+                content_format: item.go_to_market?.content_format || 'Post',
+                hook_examples: item.go_to_market?.hook_examples || [],
+                creator_fit: item.go_to_market?.creator_fit || 'General',
+            },
+            risks: {
+                ip_risk: item.risks?.ip_risk || 'low',
+                saturation_risk: item.risks?.saturation_risk || 'low',
+                notes: item.risks?.notes || 'No notes',
+            },
+            assumptions: item.assumptions || [],
             author: `Analyst_Agent_${Math.floor(Math.random() * 900) + 100}`,
-            sample_content: item.risks?.notes || `Detected significant signal for ${item.keyword} on ${item.platform}.`
+            sample_content: item.sample_content || item.risks?.notes || `Detected significant signal for ${item.keyword || 'trend'} on ${item.platform || 'social'}.`
         }));
     } catch (error) {
         console.error("Growth Agent Error:", error);

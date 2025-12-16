@@ -3,21 +3,25 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { TrendItem } from './types';
 import { checkApiKey, searchGlobalTrends, getSearchSuggestions } from './services/geminiService';
 import TrendListItem from './components/TrendListItem';
+import TrendGalleryCard from './components/TrendGalleryCard';
 import AnalysisPanel from './components/AnalysisPanel';
 import { AnimatedBackground } from './components/layout/AnimatedBackground';
 import { IntroLoader } from './components/layout/IntroLoader';
+import { Dashboard } from './components/admin/Dashboard';
 import { TRANSLATIONS } from './i18n';
-import { 
-    Flame, BrainCircuit, AlertTriangle, Ghost, Search, Zap, 
-    Twitter, Linkedin, Video, MessageCircle, Youtube, Globe, LayoutGrid, 
-    Instagram, Facebook, Moon, Sun, Languages, ArrowUpLeft, RefreshCw, Loader2
+import {
+    Flame, BrainCircuit, AlertTriangle, Search, Zap,
+    Twitter, Linkedin, Video, MessageCircle, Youtube, Globe, LayoutGrid,
+    Instagram, Facebook, Moon, Sun, Languages, ArrowUpLeft, RefreshCw, Loader2,
+    List, Grid, Box, CornerDownLeft, Activity
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // --- CONFIG ---
-
+type PageView = 'search' | 'dashboard';
 type Lang = 'en' | 'zh';
 type Theme = 'dark' | 'light';
+type ViewMode = 'list' | 'gallery';
 
 const DISCOVERY_QUERIES = [
     "Viral TikTok Filters", "Instagram Aesthetic Trends", "Cosplay Photography", 
@@ -36,23 +40,44 @@ const getPlatforms = (t: any) => [
     { id: 'FACEBOOK', label: t.facebook, icon: Facebook, color: 'text-[#1877f2]' },
 ];
 
+const SkeletonItem: React.FC<{ mode: ViewMode }> = ({ mode }) => {
+    return (
+        <div className={`rounded-2xl border border-black/5 dark:border-white/5 bg-black/5 dark:bg-white/5 animate-pulse flex flex-col justify-center px-6 ${mode === 'gallery' ? 'h-40' : 'h-24'}`}>
+            <div className="h-3 w-1/3 bg-black/10 dark:bg-white/10 rounded-full mb-3" />
+            <div className="h-2 w-2/3 bg-black/10 dark:bg-white/10 rounded-full" />
+        </div>
+    );
+};
+
+// --- CUSTOM ICONS ---
+const ButterflyIcon = ({ className }: { className?: string }) => (
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+        <path d="M50 60C50 60 70 20 90 30C100 40 90 70 70 80C60 85 50 85 50 85" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
+        <path d="M50 60C50 60 30 20 10 30C0 40 10 70 30 80C40 85 50 85 50 85" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
+        <path d="M50 60L50 90" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+        <circle cx="90" cy="30" r="4" fill="currentColor" />
+        <circle cx="10" cy="30" r="4" fill="currentColor" />
+    </svg>
+);
+
 const App: React.FC = () => {
   const [loadingApp, setLoadingApp] = useState(true);
   const [isDataReady, setIsDataReady] = useState(false);
-  
+  const [currentPage, setCurrentPage] = useState<PageView>('search');
+
   const [trends, setTrends] = useState<TrendItem[]>([]);
   const [selectedTrend, setSelectedTrend] = useState<TrendItem | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasKey, setHasKey] = useState(true);
   
-  // App State
   const [activePlatform, setActivePlatform] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const listRef = useRef<HTMLDivElement>(null); // For Scroll Detection
+  const listRef = useRef<HTMLDivElement>(null); 
 
   const [lang, setLang] = useState<Lang>('en');
   const [theme, setTheme] = useState<Theme>('dark');
@@ -61,19 +86,14 @@ const App: React.FC = () => {
   const PLATFORMS = getPlatforms(t);
 
   useEffect(() => {
-    setHasKey(checkApiKey());
     document.documentElement.classList.add('dark');
-    
-    // Initial Load
     const initData = async () => {
         await handleSearch("Trending Visual Styles AI Filters"); 
         setIsDataReady(true);
     };
-
     initData();
   }, []);
 
-  // --- AUTOCOMPLETE LOGIC ---
   useEffect(() => {
       const fetchSuggestions = async () => {
           if (searchQuery.length >= 2) {
@@ -85,8 +105,7 @@ const App: React.FC = () => {
               setShowSuggestions(false);
           }
       };
-
-      const timer = setTimeout(fetchSuggestions, 300); // 300ms debounce
+      const timer = setTimeout(fetchSuggestions, 300);
       return () => clearTimeout(timer);
   }, [searchQuery]);
 
@@ -102,12 +121,10 @@ const App: React.FC = () => {
       }
   };
 
-  const toggleLang = () => {
-      setLang(prev => prev === 'en' ? 'zh' : 'en');
-  };
+  const toggleLang = () => { setLang(prev => prev === 'en' ? 'zh' : 'en'); };
 
   const handleSearch = async (query: string) => {
-      setShowSuggestions(false); // Hide suggestions immediately
+      setShowSuggestions(false);
       setIsScanning(true);
       if (query !== searchQuery) setTrends([]); 
       setSelectedTrend(null);
@@ -122,36 +139,23 @@ const App: React.FC = () => {
       }
   };
 
-  // NEW: Load More Logic
   const handleLoadMore = async () => {
       if (isLoadingMore || isScanning) return;
       setIsLoadingMore(true);
-      
-      // Pick a random discovery query to keep it fresh and visual-biased
       const randomQuery = DISCOVERY_QUERIES[Math.floor(Math.random() * DISCOVERY_QUERIES.length)];
-      
       try {
           const newResults = await searchGlobalTrends(randomQuery);
-          // Append new results, filtering out potential duplicates by ID
           setTrends(prev => {
               const existingIds = new Set(prev.map(t => t.id));
               const uniqueNew = newResults.filter(t => !existingIds.has(t.id));
               return [...prev, ...uniqueNew];
           });
-      } catch (e) {
-          console.error("Failed to load more trends", e);
-      } finally {
-          setIsLoadingMore(false);
-      }
+      } catch (e) { console.error(e); } finally { setIsLoadingMore(false); }
   };
 
-  // NEW: Scroll Listener
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
       const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-      // Trigger when within 10px of bottom to be more responsive
-      if (scrollHeight - scrollTop <= clientHeight + 10) {
-          handleLoadMore();
-      }
+      if (scrollHeight - scrollTop <= clientHeight + 50) handleLoadMore();
   }, [isLoadingMore, isScanning]);
 
   const handleManualSubmit = (e: React.FormEvent) => {
@@ -164,254 +168,276 @@ const App: React.FC = () => {
       handleSearch(s);
   };
 
-  // Filter Logic
   const filteredTrends = trends.filter(t => {
       if (activePlatform === 'ALL') return true;
       return t.platforms.some(p => p.toUpperCase().includes(activePlatform));
   });
 
-  const trendingNow = filteredTrends.filter(t => (t.trendScore || 0) > 60).slice(0, 10); // Show more items
+  const trendingNow = filteredTrends.filter(t => (t.trendScore || 0) > 60);
   const risks = filteredTrends.filter(t => t.riskLevel === 'high' || t.sentiment === 'negative');
-  const agents = filteredTrends.filter(t => (t.trendScore || 0) > 75 && !risks.includes(t)); 
+  const agents = filteredTrends.filter(t => (t.trendScore || 0) > 75 && t.riskLevel !== 'high');
+
+  const renderTrendSection = (items: TrendItem[], variant: 'trending' | 'agent' | 'risk') => {
+      if (isScanning && items.length === 0) return <div className="space-y-4">{[1,2].map(i => <SkeletonItem key={i} mode={viewMode} />)}</div>;
+      if (items.length === 0) return <div className="py-8 text-center border border-dashed border-black/5 dark:border-white/5 rounded-2xl bg-black/5 dark:bg-white/5"><span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">No Signals</span></div>;
+
+      const ItemComponent = viewMode === 'gallery' ? TrendGalleryCard : TrendListItem;
+      const containerClass = viewMode === 'gallery' ? "grid grid-cols-2 gap-4" : "space-y-3";
+
+      return (
+          <div className={containerClass}>
+              {items.map(t => (
+                  <ItemComponent key={`${variant}-${t.id}`} trend={t} variant={variant} onClick={setSelectedTrend} isSelected={selectedTrend?.id === t.id} />
+              ))}
+          </div>
+      );
+  };
 
   return (
-    <div className={`flex flex-col h-screen bg-background font-sans text-text overflow-hidden relative transition-colors duration-300`}>
+    <div className="flex h-screen bg-transparent font-sans text-text overflow-hidden relative transition-colors duration-700">
       
-      {/* GLOBAL LOADING SCREEN */}
       <AnimatePresence>
-          {loadingApp && (
-              <IntroLoader 
-                  isDataReady={isDataReady} 
-                  onComplete={() => setLoadingApp(false)} 
-              />
-          )}
+          {loadingApp && <IntroLoader isDataReady={isDataReady} onComplete={() => setLoadingApp(false)} />}
       </AnimatePresence>
       
       <AnimatedBackground theme={theme} />
       
-      {/* --- TOP BAR --- */}
-      <div className="h-16 flex items-center justify-between px-6 border-b border-border bg-card/90 backdrop-blur-md z-30 shrink-0 shadow-sm">
-          {/* Brand */}
-          <div className="flex items-center gap-3 w-[250px]">
-                <div className="w-8 h-8 bg-pulse/20 rounded flex items-center justify-center border border-pulse/30">
-                    <Zap size={18} className="text-pulse fill-pulse" />
+      {/* 2. MAIN CONTENT (Bento Grid) - Removed Sidebar, Updated Padding */}
+      <div className="flex-1 flex flex-col p-6 gap-6 h-full overflow-hidden w-full">
+          
+          {/* HEADER ISLAND */}
+          <header className="h-20 shrink-0 glass-high rounded-[2rem] px-8 flex items-center justify-between z-30 gap-6">
+              
+              {/* LOGO BRANDING (Updated to Butterfly) */}
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="p-2 bg-gradient-to-br from-[#BD00FF]/20 to-[#00F0FF]/10 rounded-xl border border-white/10 shadow-[0_5px_15px_rgba(189,0,255,0.2)] backdrop-blur-md">
+                    <ButterflyIcon className="text-white w-5 h-5 drop-shadow-[0_0_8px_rgba(0,240,255,0.8)]" />
                 </div>
-                <div>
-                    <h1 className="text-lg font-black text-text tracking-tighter leading-none">{t.appTitle}</h1>
-                    <span className="text-[8px] font-mono text-slate-500 tracking-[0.3em] uppercase block mt-0.5">{t.appSubtitle}</span>
+                <div className="flex flex-col justify-center">
+                    <span className="text-lg font-black italic tracking-tighter text-zinc-900 dark:text-white/90 leading-none drop-shadow-sm transition-colors">
+                        TREND
+                    </span>
+                    <span 
+                        className="text-[8px] font-bold tracking-[0.25em] bg-gradient-to-r from-[#00F0FF] via-[#BD00FF] to-[#FF7E5F] text-transparent bg-clip-text"
+                        style={{ backgroundSize: '200% auto' }}
+                    >
+                        PULSE
+                    </span>
                 </div>
-           </div>
+              </div>
 
-           {/* Social Filter Icons */}
-           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-[50vw]">
-               {PLATFORMS.map((p) => (
+              {/* Separator */}
+              <div className="h-8 w-px bg-black/10 dark:bg-white/10 hidden md:block shrink-0 transition-colors" />
+
+              {/* Platform Pills */}
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar flex-1 mask-gradient-r">
+                 {PLATFORMS.map((p) => (
                    <button
                        key={p.id}
                        onClick={() => setActivePlatform(p.id)}
                        className={`
-                           flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 shrink-0
+                           flex items-center gap-2 px-5 py-2.5 rounded-full border transition-all duration-300 shrink-0
                            ${activePlatform === p.id 
-                                ? 'bg-black/10 dark:bg-white/10 border-pulse text-text shadow-sm' 
-                                : 'bg-transparent border-transparent text-slate-500 hover:text-text hover:bg-black/5 dark:hover:bg-white/5'
+                                ? 'bg-zinc-900 dark:bg-white text-white dark:text-black shadow-[0_0_20px_rgba(0,0,0,0.2)] dark:shadow-[0_0_20px_rgba(255,255,255,0.4)] border-transparent scale-105 font-bold' 
+                                : 'bg-transparent border-transparent text-slate-500 hover:text-zinc-900 dark:hover:text-text hover:bg-black/5 dark:hover:bg-white/5'
                            }
                        `}
                    >
-                       <p.icon size={14} className={activePlatform === p.id ? p.color : 'currentColor'} />
-                       <span className={`text-[10px] font-bold uppercase ${activePlatform === p.id ? 'block' : 'hidden xl:block'}`}>
+                       <p.icon size={16} className={activePlatform === p.id ? 'text-white dark:text-black' : 'currentColor'} />
+                       <span className={`text-[10px] font-bold uppercase tracking-wide ${activePlatform === p.id ? 'block' : 'hidden xl:block'}`}>
                            {p.label}
                        </span>
                    </button>
-               ))}
-           </div>
+                 ))}
+              </div>
 
-           {/* Settings & Status */}
-           <div className="w-[250px] flex justify-end items-center gap-4">
-                {/* NEW: Refresh Button */}
-                <button 
-                    onClick={handleLoadMore} 
-                    disabled={isLoadingMore}
-                    className="p-2 rounded-full hover:bg-white/5 text-slate-500 hover:text-pulse transition-colors relative"
-                    title="Refresh Data"
-                >
-                    <RefreshCw size={16} className={isLoadingMore ? "animate-spin text-pulse" : ""} />
-                </button>
+              {/* Tools */}
+              <div className="flex items-center gap-4 shrink-0">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-black/5 dark:bg-black/20 rounded-full border border-black/5 dark:border-white/5 transition-colors">
+                      <button onClick={toggleLang} className="text-slate-500 hover:text-zinc-900 dark:hover:text-white transition-colors"><Languages size={18}/></button>
+                      <div className="w-px h-4 bg-black/10 dark:bg-white/10 transition-colors"/>
+                      <button onClick={toggleTheme} className="text-slate-500 hover:text-zinc-900 dark:hover:text-white transition-colors">{theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}</button>
+                      <div className="w-px h-4 bg-black/10 dark:bg-white/10 transition-colors"/>
+                      {/* VKS Dashboard 切换按钮 */}
+                      <button
+                          onClick={() => setCurrentPage(currentPage === 'search' ? 'dashboard' : 'search')}
+                          className={`transition-colors ${currentPage === 'dashboard' ? 'text-spark' : 'text-slate-500 hover:text-zinc-900 dark:hover:text-white'}`}
+                          title={currentPage === 'dashboard' ? '返回搜索' : 'VKS 控制台'}
+                      >
+                          <Activity size={18} />
+                      </button>
+                  </div>
+                  <button onClick={handleLoadMore} disabled={isLoadingMore} className="w-10 h-10 rounded-full bg-pulse/10 hover:bg-pulse/20 text-pulse flex items-center justify-center transition-all border border-pulse/20">
+                      <RefreshCw size={16} className={isLoadingMore ? "animate-spin" : ""} />
+                  </button>
+              </div>
+          </header>
 
-                <div className="flex items-center gap-2 border-l border-border pl-4">
-                    <button onClick={toggleLang} className="text-slate-500 hover:text-text transition-colors">
-                        <Languages size={16} />
-                    </button>
-                    <button onClick={toggleTheme} className="text-slate-500 hover:text-text transition-colors">
-                        {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-                    </button>
-                </div>
+          {/* 根据 currentPage 显示不同内容 */}
+          {currentPage === 'dashboard' ? (
+              <div className="flex-1 overflow-hidden">
+                  <Dashboard />
+              </div>
+          ) : (
+          <>
+          {/* MAIN GRID */}
+          <div className="flex-1 flex gap-6 overflow-hidden">
 
-                {isScanning ? (
-                    <div className="flex items-center gap-2 text-xs font-mono text-pulse animate-pulse">
-                        <Globe size={14} className="animate-spin" />
-                        <span className="hidden lg:inline">{t.statusScanning}</span>
-                    </div>
-                ) : (
-                    <div className="flex items-center gap-2 text-[10px] font-mono text-slate-600 dark:text-slate-500">
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                        <span className="hidden lg:inline">{t.statusLive}</span>
-                    </div>
-                )}
-           </div>
-      </div>
+              {/* FEED ISLAND (Left) */}
+              <div className="w-[480px] min-w-[480px] glass-high rounded-[2.5rem] flex flex-col overflow-hidden relative z-10">
+                  <div className="p-8 border-b border-black/5 dark:border-white/5 flex justify-between items-end bg-gradient-to-b from-black/5 to-transparent dark:from-white/5 transition-colors">
+                      <div>
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2 block">
+                              Incoming Stream
+                          </span>
+                          <h2 className="text-2xl font-bold text-zinc-900 dark:text-white tracking-tight flex items-center gap-3 transition-colors">
+                              {activePlatform === 'ALL' ? 'Global Feed' : activePlatform}
+                              <span className="text-sm font-mono text-pulse bg-pulse/10 px-2 py-1 rounded-md border border-pulse/20">
+                                  {filteredTrends.length}
+                              </span>
+                          </h2>
+                      </div>
+                      <div className="flex bg-black/5 dark:bg-black/20 rounded-xl p-1 border border-black/5 dark:border-white/5 backdrop-blur-sm transition-colors">
+                          <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-zinc-900 dark:hover:text-white'}`}><List size={16} /></button>
+                          <button onClick={() => setViewMode('gallery')} className={`p-2 rounded-lg transition-all ${viewMode === 'gallery' ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-zinc-900 dark:hover:text-white'}`}><Grid size={16} /></button>
+                      </div>
+                  </div>
 
-      {/* --- MAIN WORKSPACE --- */}
-      <div className="flex-1 flex overflow-hidden z-10 pb-20"> 
-        
-        {/* LEFT: Feed */}
-        <div 
-            className="w-[380px] min-w-[380px] border-r border-border bg-card/80 backdrop-blur-sm h-full flex flex-col transition-colors"
-        >
-            <div className="p-3 border-b border-border bg-black/5 dark:bg-black/20 flex justify-between items-center">
-                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">
-                    Signals: {activePlatform}
-                </span>
-                <span className="text-[10px] font-mono text-pulse">
-                    {filteredTrends.length} {t.signalsDetected}
-                </span>
-            </div>
+                  <div ref={listRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-8 space-y-10 no-scrollbar mask-gradient-b">
+                      <section>
+                          <div className="flex items-center gap-3 mb-6">
+                              <div className="p-2 bg-spark/10 rounded-lg"><Flame size={18} className="text-spark" /></div>
+                              <h3 className="text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest transition-colors">{t.sectionTrending}</h3>
+                          </div>
+                          {renderTrendSection(trendingNow, 'trending')}
+                      </section>
+                      <section>
+                          <div className="flex items-center gap-3 mb-6 pt-6 border-t border-black/5 dark:border-white/5 transition-colors">
+                              <div className="p-2 bg-pulse/10 rounded-lg"><BrainCircuit size={18} className="text-pulse" /></div>
+                              <h3 className="text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest transition-colors">{t.sectionOpportunity}</h3>
+                          </div>
+                          {renderTrendSection(agents, 'agent')}
+                      </section>
+                      <section>
+                          <div className="flex items-center gap-3 mb-6 pt-6 border-t border-black/5 dark:border-white/5 transition-colors">
+                              <div className="p-2 bg-yellow-500/10 rounded-lg"><AlertTriangle size={18} className="text-yellow-500" /></div>
+                              <h3 className="text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest transition-colors">{t.sectionRisk}</h3>
+                          </div>
+                          {renderTrendSection(risks, 'risk')}
+                      </section>
+                      <div className="h-20" />
+                  </div>
+              </div>
 
-            <div 
-                ref={listRef}
-                onScroll={handleScroll}
-                className="flex-1 overflow-y-auto p-4 space-y-8 no-scrollbar pb-32"
-            >
-                {filteredTrends.length === 0 && !isScanning ? (
-                    <div className="flex flex-col items-center justify-center h-60 text-center opacity-50">
-                        <Ghost size={32} className="mb-3 text-slate-400" />
-                        <p className="text-xs font-mono text-slate-500">{t.noSignals}</p>
-                    </div>
-                ) : (
-                    <>
-                        <section>
-                            <div className="flex items-center gap-2 mb-3 px-1">
-                                <Flame size={14} className="text-[#ff6b35]" />
-                                <h3 className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{t.sectionTrending}</h3>
-                            </div>
-                            <div className="space-y-1">
-                                {trendingNow.map(t => (
-                                    <TrendListItem key={t.id} trend={t} variant="trending" onClick={setSelectedTrend} isSelected={selectedTrend?.id === t.id} />
-                                ))}
-                            </div>
-                        </section>
-                        
-                        {agents.length > 0 && (
-                            <section>
-                                <div className="flex items-center gap-2 mb-3 px-1 pt-2 border-t border-border">
-                                    <BrainCircuit size={14} className="text-pulse" />
-                                    <h3 className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{t.sectionOpportunity}</h3>
-                                </div>
-                                <div className="space-y-1">
-                                    {agents.map(t => (
-                                        <TrendListItem key={`ag-${t.id}`} trend={t} variant="agent" onClick={setSelectedTrend} isSelected={selectedTrend?.id === t.id} />
-                                    ))}
-                                </div>
-                            </section>
-                        )}
+              {/* ANALYSIS ISLAND (Right) */}
+              <div className="flex-1 glass-high rounded-[2.5rem] overflow-hidden relative z-10 flex flex-col">
+                  <AnalysisPanel trend={selectedTrend} t={t} />
+              </div>
 
-                        {risks.length > 0 && (
-                            <section>
-                                <div className="flex items-center gap-2 mb-3 px-1 pt-2 border-t border-border">
-                                    <AlertTriangle size={14} className="text-yellow-500" />
-                                    <h3 className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{t.sectionRisk}</h3>
-                                </div>
-                                <div className="space-y-1">
-                                    {risks.map(t => (
-                                        <TrendListItem key={`rk-${t.id}`} trend={t} variant="risk" onClick={setSelectedTrend} isSelected={selectedTrend?.id === t.id} />
-                                    ))}
-                                </div>
-                            </section>
-                        )}
-                        
-                        {/* Loading More Indicator */}
-                        {isLoadingMore && (
-                            <div className="py-4 flex justify-center text-pulse animate-pulse">
-                                <Loader2 size={20} className="animate-spin" />
-                            </div>
-                        )}
-                    </>
-                )}
-                 <div className="h-12" />
-            </div>
-        </div>
+          </div>
 
-        {/* RIGHT: Analysis */}
-        <div className="flex-1 h-full bg-background relative overflow-hidden transition-colors">
-            <AnalysisPanel trend={selectedTrend} t={t} />
-        </div>
-
-      </div>
-
-      {/* --- FLOATING COMMAND BAR (BOTTOM) --- */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-3xl z-50 px-4">
-          <motion.div 
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="relative group"
-          >
-              {/* SUGGESTIONS DROPDOWN (Pops UP) */}
-              <AnimatePresence>
-                {showSuggestions && suggestions.length > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute bottom-full mb-3 left-0 right-0 bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xl overflow-hidden p-1 z-50"
-                    >
-                        <div className="px-3 py-2 border-b border-border/50 flex items-center justify-between">
-                             <span className="text-[10px] font-mono text-pulse uppercase tracking-wider">Visual Intelligence Suggestions</span>
-                             <span className="text-[9px] text-slate-500">Gemini Flash-Lite</span>
-                        </div>
+          {/* FLOATING COMMAND BAR (Bottom) - Centered & Updated Colors */}
+          <div className="absolute bottom-8 left-0 right-0 z-50 flex justify-center pointer-events-none">
+             <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="w-full max-w-3xl pointer-events-auto relative px-4">
+                
+                {/* Suggestions Popover */}
+                <AnimatePresence>
+                  {showSuggestions && suggestions.length > 0 && (
+                    <motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.95 }} className="absolute bottom-full mb-4 left-4 right-4 glass-high border border-indigo-500/20 rounded-3xl shadow-[0_0_30px_rgba(79,70,229,0.1)] overflow-hidden p-2 backdrop-blur-xl">
                         {suggestions.map((s, i) => (
-                            <button
-                                key={i}
-                                onClick={() => selectSuggestion(s)}
-                                className="w-full text-left px-4 py-2.5 hover:bg-pulse/10 hover:text-pulse text-sm text-text transition-colors flex items-center gap-3 group/item"
-                            >
-                                <ArrowUpLeft size={12} className="text-slate-500 group-hover/item:text-pulse" />
+                            <button key={i} onClick={() => selectSuggestion(s)} className="w-full text-left px-6 py-4 hover:bg-white/5 rounded-2xl hover:text-white text-sm text-indigo-200 transition-colors flex items-center gap-4 group/item font-medium">
+                                <ArrowUpLeft size={16} className="text-indigo-400 group-hover/item:text-[#00F0FF]" />
                                 {s}
                             </button>
                         ))}
                     </motion.div>
-                )}
-              </AnimatePresence>
+                  )}
+                </AnimatePresence>
 
-              {/* Glow Effect */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-pulse via-purple-500 to-spark rounded-full opacity-30 dark:opacity-30 group-focus-within:opacity-70 blur-md transition-opacity duration-500 hidden dark:block" />
-              
-              <form onSubmit={handleManualSubmit} className="relative bg-card/90 backdrop-blur-xl border border-border rounded-full flex items-center p-2 shadow-2xl transition-all duration-300 focus-within:ring-1 focus-within:ring-pulse/50">
-                  <div className="pl-4 pr-3 text-slate-400">
-                      {isScanning ? <Zap size={20} className="animate-pulse text-pulse" /> : <Search size={20} className="group-focus-within:text-pulse transition-colors" />}
-                  </div>
-                  <input 
-                      ref={searchInputRef}
-                      type="text" 
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder={t.scanPlaceholder}
-                      className="flex-1 bg-transparent border-none outline-none text-text font-mono text-sm h-10 placeholder:text-slate-500"
-                      autoComplete="off"
-                  />
-                  <div className="flex items-center gap-2 pr-2">
-                      <span className="hidden md:block text-[10px] font-mono text-slate-500 border border-border px-2 py-1 rounded">
-                          ⏎ ENTER
-                      </span>
-                      <button 
-                        type="submit"
-                        disabled={isScanning}
-                        className="bg-pulse hover:bg-pulse/80 text-black rounded-full p-2 transition-colors disabled:opacity-50"
-                      >
-                          <Zap size={18} fill="currentColor" />
-                      </button>
-                  </div>
-              </form>
-          </motion.div>
+                {/* Search Pill - REFACTORED FOR DIM -> GLOW INTERACTION */}
+                <form 
+                  onSubmit={handleManualSubmit} 
+                  className="
+                    relative group rounded-full flex items-center p-2 pl-6
+                    transition-all duration-500 ease-out
+                    /* Default State: Dim, glassy, subtle border */
+                    bg-black/40 backdrop-blur-md border border-white/5
+                    shadow-lg
+                    /* Hover/Focus State: Glowing, Gradient, defined border */
+                    hover:bg-zinc-900/80 hover:border-white/20 hover:shadow-[0_0_30px_rgba(79,70,229,0.3)]
+                    focus-within:bg-zinc-900/90 focus-within:border-indigo-500/50 focus-within:shadow-[0_0_50px_rgba(79,70,229,0.5)]
+                    focus-within:ring-1 focus-within:ring-indigo-500/50
+                  "
+                >
+                    
+                    {/* Ambient Glow behind the bar - Invisible by default, fades in on interaction */}
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-cyan-500/20 blur-2xl -z-10 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-500" />
+                    
+                    {/* Search Icon */}
+                    <div className="mr-4 text-slate-600 group-hover:text-slate-200 group-focus-within:text-[#00F0FF] transition-colors duration-300">
+                        {isScanning ? <Zap size={24} className="animate-pulse text-[#00F0FF]" /> : <Search size={22} />}
+                    </div>
+                    
+                    {/* Input Field & Animated Placeholder */}
+                    <div className="flex-1 relative h-14 flex items-center overflow-hidden">
+                        <AnimatePresence mode="wait">
+                            {searchQuery === "" && !isScanning && (
+                                <motion.div 
+                                    className="absolute inset-0 flex items-center pointer-events-none"
+                                    initial={{ opacity: 1 }}
+                                    exit={{ opacity: 0, transition: { duration: 0.1 } }}
+                                >
+                                    {t.scanPlaceholder.split('').map((char, i) => (
+                                        <motion.span
+                                            key={i}
+                                            initial={{ opacity: 0, y: 8, scale: 0.5 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            transition={{ 
+                                                duration: 0.3,
+                                                delay: i * 0.02, // Rapid staggered delay
+                                                type: "spring",
+                                                stiffness: 400,
+                                                damping: 25
+                                            }}
+                                            className="text-slate-500/50 font-medium text-base font-sans group-hover:text-slate-300 group-focus-within:text-slate-400 transition-colors duration-300"
+                                        >
+                                            {char === " " ? "\u00A0" : char}
+                                        </motion.span>
+                                    ))}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        <input 
+                            ref={searchInputRef}
+                            type="text" 
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full h-full bg-transparent border-none outline-none text-slate-300 font-sans text-base font-medium tracking-wide selection:bg-[#BD00FF]/30 z-10 relative group-focus-within:text-white transition-colors"
+                        />
+                    </div>
+                    
+                    {/* Right Side Actions - CHANGED TO ENTER BUTTON */}
+                    <div className="flex items-center gap-2 pr-2">
+                        <button 
+                            type="submit" 
+                            disabled={isScanning} 
+                            className="h-10 px-4 rounded-full bg-white/5 border border-white/5 flex items-center gap-3 transition-all group/btn active:scale-95 shadow-none opacity-50 group-hover:opacity-100 group-focus-within:opacity-100 group-hover:bg-white/10 group-hover:border-white/10 group-hover:shadow-lg"
+                        >
+                            <span className="text-[10px] font-mono font-bold text-slate-500 group-hover:text-indigo-300 transition-colors tracking-widest">ENTER</span>
+                            <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center border border-white/5 group-hover:bg-indigo-500/20 group-hover:border-indigo-500/30 transition-all">
+                                <CornerDownLeft size={14} className="text-slate-500 group-hover:text-indigo-300 transition-colors" />
+                            </div>
+                        </button>
+                    </div>
+                </form>
+
+             </motion.div>
+          </div>
+          </>
+          )}
+
       </div>
-
     </div>
   );
 };
