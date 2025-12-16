@@ -5,8 +5,7 @@ import { analyzeDeepDive, generateTrendImage } from '../services/geminiService';
 import { Abstract3DAnchor } from './effects/Abstract3DAnchor';
 import { 
     Loader2, Sparkles, Target, ExternalLink, 
-    ShieldAlert, Zap, TrendingUp, DollarSign,
-    Globe, Copy, Layers, Camera, AlertCircle, RefreshCcw, Info
+    Zap, Camera, RefreshCcw, Layers
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -101,16 +100,58 @@ const AnalysisPanel: React.FC<Props> = ({ trend, t }) => {
                 </span>
                 <span className="text-[10px] text-slate-500 font-mono">ID: {trend.id.split('-')[1]}</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-black text-zinc-900 dark:text-white tracking-tight leading-[0.9] uppercase mb-6 transition-colors">
+            <h1 className="text-4xl md:text-5xl font-black text-zinc-900 dark:text-white tracking-tight leading-[0.9] uppercase mb-8 transition-colors">
                 {trend.topic}
             </h1>
             
-            <div className="flex gap-8 border-b border-black/5 dark:border-white/5 transition-colors">
-                <button onClick={() => setActiveTab('intel')} className={`pb-4 text-xs font-bold uppercase tracking-[0.2em] transition-all ${activeTab === 'intel' ? 'text-pulse border-b-2 border-pulse shadow-[0_4px_20px_-5px_#00F0FF]' : 'text-slate-500 hover:text-zinc-900 dark:hover:text-white'}`}>
-                    {t.tabIntel}
+            {/* --- LIQUID GLASS TABS --- */}
+            <div className="flex gap-4">
+                {/* Tab 1: Intelligence */}
+                <button 
+                    onClick={() => setActiveTab('intel')} 
+                    className={`
+                        relative group px-8 py-3 rounded-full overflow-hidden transition-all duration-500
+                        border backdrop-blur-xl
+                        ${activeTab === 'intel' 
+                            ? 'border-pulse/50 shadow-[0_0_30px_rgba(0,240,255,0.2),inset_0_0_20px_rgba(0,240,255,0.1)]' 
+                            : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20'}
+                    `}
+                >
+                    {/* Active Fluid Background */}
+                    {activeTab === 'intel' && (
+                        <div className="absolute inset-0 bg-gradient-to-b from-pulse/20 to-pulse/5 opacity-80" />
+                    )}
+                    
+                    {/* Specular Highlight (The "Liquid" Reflection) */}
+                    <div className="absolute top-0 left-0 right-0 h-[40%] bg-gradient-to-b from-white/30 to-transparent opacity-60 rounded-t-full pointer-events-none" />
+                    
+                    <span className={`relative z-10 text-xs font-black uppercase tracking-[0.2em] ${activeTab === 'intel' ? 'text-white drop-shadow-[0_0_5px_rgba(0,240,255,0.8)]' : 'text-slate-500 group-hover:text-white'}`}>
+                        {t.tabIntel}
+                    </span>
                 </button>
-                <button onClick={() => setActiveTab('strategy')} className={`pb-4 text-xs font-bold uppercase tracking-[0.2em] transition-all ${activeTab === 'strategy' ? 'text-spark border-b-2 border-spark shadow-[0_4px_20px_-5px_#FF7E5F]' : 'text-slate-500 hover:text-zinc-900 dark:hover:text-white'}`}>
-                    {t.tabStrategy}
+
+                {/* Tab 2: Strategy */}
+                <button 
+                    onClick={() => setActiveTab('strategy')} 
+                    className={`
+                        relative group px-8 py-3 rounded-full overflow-hidden transition-all duration-500
+                        border backdrop-blur-xl
+                        ${activeTab === 'strategy' 
+                            ? 'border-spark/50 shadow-[0_0_30px_rgba(255,126,95,0.2),inset_0_0_20px_rgba(255,126,95,0.1)]' 
+                            : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20'}
+                    `}
+                >
+                    {/* Active Fluid Background */}
+                    {activeTab === 'strategy' && (
+                        <div className="absolute inset-0 bg-gradient-to-b from-spark/20 to-spark/5 opacity-80" />
+                    )}
+
+                    {/* Specular Highlight */}
+                    <div className="absolute top-0 left-0 right-0 h-[40%] bg-gradient-to-b from-white/30 to-transparent opacity-60 rounded-t-full pointer-events-none" />
+
+                    <span className={`relative z-10 text-xs font-black uppercase tracking-[0.2em] ${activeTab === 'strategy' ? 'text-white drop-shadow-[0_0_5px_rgba(255,126,95,0.8)]' : 'text-slate-500 group-hover:text-white'}`}>
+                        {t.tabStrategy}
+                    </span>
                 </button>
             </div>
          </div>
