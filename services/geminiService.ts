@@ -261,14 +261,26 @@ export const analyzeDeepDive = async (trend: TrendItem): Promise<AnalysisResult>
     `;
   
     try {
-      const response = await ai.models.generateContent({
-        model,
-        contents: prompt,
-        config: { 
-            // Removed responseMimeType: "application/json" because it conflicts with googleSearch tool
-            tools: [{ googleSearch: {} }] 
-        },
-      });
+      // Retry Logic: Try with Tools first, fallback to basic generation if tools fail (500 error)
+      let response;
+      try {
+          response = await ai.models.generateContent({
+            model,
+            contents: prompt,
+            config: { 
+                tools: [{ googleSearch: {} }] 
+            },
+          });
+      } catch (toolError) {
+          console.warn("Analysis with Google Search failed, retrying without tools...", toolError);
+          response = await ai.models.generateContent({
+              model,
+              contents: prompt,
+              config: { 
+                  responseMimeType: "application/json"
+              },
+          });
+      }
   
       const data = cleanAndParseJSON(response.text || "{}", {});
       
@@ -393,62 +405,65 @@ export const runGrowthAnalyticsAgent = async (signals: SocialSignal[]): Promise<
         });
         
         const parsed = cleanAndParseJSON(response.text || "[]", []);
-        if (!Array.isArray(parsed)) return []; // CRITICAL CHECK to prevent .map crashes
+        if (!Array.isArray(parsed)) return [];
         
-        return parsed.map((item: any) => ({
-            date: item.date || today,
-            window_hours: item.window_hours || 24,
-            platform: item.platform || 'Unknown',
-            keyword: item.keyword || 'Unknown Trend',
-            category: item.category || 'General',
-            metrics: {
-                search_index: item.metrics?.search_index || 0,
-                views: item.metrics?.views || 0,
-                likes: item.metrics?.likes || 0,
-                comments: item.metrics?.comments || 0,
-                shares: item.metrics?.shares || 0,
-                saves: item.metrics?.saves || 0,
-                posts: item.metrics?.posts || 0,
-                prev_views: item.metrics?.prev_views || 0,
-                prev_likes: item.metrics?.prev_likes || 0,
-                prev_comments: item.metrics?.prev_comments || 0,
-                prev_shares: item.metrics?.prev_shares || 0,
-                prev_saves: item.metrics?.prev_saves || 0,
-                prev_posts: item.metrics?.prev_posts || 0,
-            },
-            scores: {
-                H: item.scores?.H || 0,
-                V: item.scores?.V || 0,
-                D: item.scores?.D || 0,
-                F: item.scores?.F || 0,
-                M: item.scores?.M || 0,
-                R: item.scores?.R || 0,
-                trend_score: item.scores?.trend_score || 0,
-            },
-            lifecycle: item.lifecycle || 'emerging',
-            agent_ready: item.agent_ready || false,
-            build_plan: {
-                recommended: item.build_plan?.recommended || false,
-                agent_type: item.build_plan?.agent_type || 'Custom',
-                model_stack: item.build_plan?.model_stack || [],
-                interaction: item.build_plan?.interaction || '',
-                expected_time_to_ship_days: item.build_plan?.expected_time_to_ship_days || 0,
-            },
-            go_to_market: {
-                primary_platform: item.go_to_market?.primary_platform || 'Generic',
-                content_format: item.go_to_market?.content_format || 'Post',
-                hook_examples: item.go_to_market?.hook_examples || [],
-                creator_fit: item.go_to_market?.creator_fit || 'General',
-            },
-            risks: {
-                ip_risk: item.risks?.ip_risk || 'low',
-                saturation_risk: item.risks?.saturation_risk || 'low',
-                notes: item.risks?.notes || 'No notes',
-            },
-            assumptions: item.assumptions || [],
-            author: `Analyst_Agent_${Math.floor(Math.random() * 900) + 100}`,
-            sample_content: item.sample_content || item.risks?.notes || `Detected significant signal for ${item.keyword || 'trend'} on ${item.platform || 'social'}.`
-        }));
+        // Filter out nulls/primitives to prevent crash on property access (e.g. metrics.search_index)
+        return parsed
+            .filter((item: any) => item && typeof item === 'object')
+            .map((item: any) => ({
+                date: item.date || today,
+                window_hours: item.window_hours || 24,
+                platform: item.platform || 'Unknown',
+                keyword: item.keyword || 'Unknown Trend',
+                category: item.category || 'General',
+                metrics: {
+                    search_index: item.metrics?.search_index || 0,
+                    views: item.metrics?.views || 0,
+                    likes: item.metrics?.likes || 0,
+                    comments: item.metrics?.comments || 0,
+                    shares: item.metrics?.shares || 0,
+                    saves: item.metrics?.saves || 0,
+                    posts: item.metrics?.posts || 0,
+                    prev_views: item.metrics?.prev_views || 0,
+                    prev_likes: item.metrics?.prev_likes || 0,
+                    prev_comments: item.metrics?.prev_comments || 0,
+                    prev_shares: item.metrics?.prev_shares || 0,
+                    prev_saves: item.metrics?.prev_saves || 0,
+                    prev_posts: item.metrics?.prev_posts || 0,
+                },
+                scores: {
+                    H: item.scores?.H || 0,
+                    V: item.scores?.V || 0,
+                    D: item.scores?.D || 0,
+                    F: item.scores?.F || 0,
+                    M: item.scores?.M || 0,
+                    R: item.scores?.R || 0,
+                    trend_score: item.scores?.trend_score || 0,
+                },
+                lifecycle: item.lifecycle || 'emerging',
+                agent_ready: item.agent_ready || false,
+                build_plan: {
+                    recommended: item.build_plan?.recommended || false,
+                    agent_type: item.build_plan?.agent_type || 'Custom',
+                    model_stack: item.build_plan?.model_stack || [],
+                    interaction: item.build_plan?.interaction || '',
+                    expected_time_to_ship_days: item.build_plan?.expected_time_to_ship_days || 0,
+                },
+                go_to_market: {
+                    primary_platform: item.go_to_market?.primary_platform || 'Generic',
+                    content_format: item.go_to_market?.content_format || 'Post',
+                    hook_examples: item.go_to_market?.hook_examples || [],
+                    creator_fit: item.go_to_market?.creator_fit || 'General',
+                },
+                risks: {
+                    ip_risk: item.risks?.ip_risk || 'low',
+                    saturation_risk: item.risks?.saturation_risk || 'low',
+                    notes: item.risks?.notes || 'No notes',
+                },
+                assumptions: item.assumptions || [],
+                author: `Analyst_Agent_${Math.floor(Math.random() * 900) + 100}`,
+                sample_content: item.sample_content || item.risks?.notes || `Detected significant signal for ${item.keyword || 'trend'} on ${item.platform || 'social'}.`
+            }));
     } catch (error) {
         console.error("Growth Agent Error:", error);
         return [];

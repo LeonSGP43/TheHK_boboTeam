@@ -104,56 +104,60 @@ const AnalysisPanel: React.FC<Props> = ({ trend, t }) => {
                 {trend.topic}
             </h1>
             
-            {/* --- LIQUID GLASS TABS --- */}
-            <div className="flex gap-4">
-                {/* Tab 1: Intelligence */}
-                <button 
-                    onClick={() => setActiveTab('intel')} 
-                    className={`
-                        relative group px-8 py-3 rounded-full overflow-hidden transition-all duration-500
-                        border backdrop-blur-xl
-                        ${activeTab === 'intel' 
-                            ? 'border-pulse/50 shadow-[0_0_30px_rgba(0,240,255,0.2),inset_0_0_20px_rgba(0,240,255,0.1)]' 
-                            : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20'}
-                    `}
+            {/* --- TRANSPARENT LIQUID GLASS SLIDER --- */}
+            {/* Base Container: Recessed Dark Glass */}
+            <div className="relative w-full max-w-md h-16 p-1 rounded-full bg-[#050505]/40 border border-white/5 shadow-[inset_0_4px_10px_rgba(0,0,0,0.4)] backdrop-blur-md flex overflow-hidden">
+                
+                {/* The Sliding Liquid Pill */}
+                <motion.div 
+                    className="absolute top-1 bottom-1 rounded-full z-0 overflow-hidden"
+                    initial={false}
+                    animate={{
+                        left: activeTab === 'intel' ? '4px' : '50%',
+                        right: activeTab === 'intel' ? '50%' : '4px',
+                    }}
+                    transition={{ type: "spring", stiffness: 280, damping: 28 }}
                 >
-                    {/* Active Fluid Background */}
-                    {activeTab === 'intel' && (
-                        <div className="absolute inset-0 bg-gradient-to-b from-pulse/20 to-pulse/5 opacity-80" />
-                    )}
-                    
-                    {/* Specular Highlight (The "Liquid" Reflection) */}
-                    <div className="absolute top-0 left-0 right-0 h-[40%] bg-gradient-to-b from-white/30 to-transparent opacity-60 rounded-t-full pointer-events-none" />
-                    
-                    <span className={`relative z-10 text-xs font-black uppercase tracking-[0.2em] ${activeTab === 'intel' ? 'text-white drop-shadow-[0_0_5px_rgba(0,240,255,0.8)]' : 'text-slate-500 group-hover:text-white'}`}>
+                     {/* The "Glass" Body */}
+                     <div className={`
+                        w-full h-full rounded-full relative
+                        border border-white/20
+                        backdrop-blur-xl
+                        transition-colors duration-700
+                        ${activeTab === 'intel' ? 'bg-pulse/5 shadow-[0_0_30px_rgba(0,240,255,0.15)]' : 'bg-spark/5 shadow-[0_0_30px_rgba(255,126,95,0.15)]'}
+                     `}>
+                        {/* Top Specular Highlight (The wet look) */}
+                        <div className="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/40 to-transparent opacity-90 rounded-t-full" />
+                        
+                        {/* Inner Tint Glow */}
+                        <div className={`absolute inset-0 opacity-20 rounded-full ${activeTab === 'intel' ? 'bg-gradient-to-tr from-pulse to-transparent' : 'bg-gradient-to-tr from-spark to-transparent'}`} />
+                        
+                        {/* Bottom Rim Light */}
+                        <div className="absolute bottom-1 left-4 right-4 h-[1px] bg-white/40 blur-[1px] rounded-full" />
+                     </div>
+                </motion.div>
+
+                {/* Tab 1 Trigger */}
+                <button 
+                    onClick={() => setActiveTab('intel')}
+                    className="flex-1 relative z-10 h-full rounded-full flex items-center justify-center transition-colors duration-300 group"
+                >
+                    <span className={`text-xs font-black uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'intel' ? 'text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] scale-105' : 'text-slate-500 group-hover:text-slate-300'}`}>
                         {t.tabIntel}
                     </span>
                 </button>
 
-                {/* Tab 2: Strategy */}
+                {/* Tab 2 Trigger */}
                 <button 
-                    onClick={() => setActiveTab('strategy')} 
-                    className={`
-                        relative group px-8 py-3 rounded-full overflow-hidden transition-all duration-500
-                        border backdrop-blur-xl
-                        ${activeTab === 'strategy' 
-                            ? 'border-spark/50 shadow-[0_0_30px_rgba(255,126,95,0.2),inset_0_0_20px_rgba(255,126,95,0.1)]' 
-                            : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20'}
-                    `}
+                    onClick={() => setActiveTab('strategy')}
+                    className="flex-1 relative z-10 h-full rounded-full flex items-center justify-center transition-colors duration-300 group"
                 >
-                    {/* Active Fluid Background */}
-                    {activeTab === 'strategy' && (
-                        <div className="absolute inset-0 bg-gradient-to-b from-spark/20 to-spark/5 opacity-80" />
-                    )}
-
-                    {/* Specular Highlight */}
-                    <div className="absolute top-0 left-0 right-0 h-[40%] bg-gradient-to-b from-white/30 to-transparent opacity-60 rounded-t-full pointer-events-none" />
-
-                    <span className={`relative z-10 text-xs font-black uppercase tracking-[0.2em] ${activeTab === 'strategy' ? 'text-white drop-shadow-[0_0_5px_rgba(255,126,95,0.8)]' : 'text-slate-500 group-hover:text-white'}`}>
+                    <span className={`text-xs font-black uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'strategy' ? 'text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] scale-105' : 'text-slate-500 group-hover:text-slate-300'}`}>
                         {t.tabStrategy}
                     </span>
                 </button>
             </div>
+
          </div>
       </div>
 
