@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 // 后端 API 地址配置
-const BACKEND_URL = process.env.BACKEND_URL || 'https://adalpha-backend-88968107416.us-central1.run.app';
+const BACKEND_URL = (process.env.BACKEND_URL || process.env.VITE_BACKEND_URL || 'http://localhost:8000');
 
 export interface VKSDataPoint {
   time: string;
@@ -113,11 +113,18 @@ export const useTrendData = () => {
       eventSource.addEventListener('trend_update', (event) => {
         try {
           const payload = JSON.parse(event.data);
-          // trend_update 包含 velocity 数据，可以用来补充 VKS 计算
-          if (payload.data?.metadata?.velocity) {
-            const rawVelocity = payload.data.metadata.velocity;
-            // 可以选择性地更新 velocity 显示
-            console.log('[VKS] trend_update velocity:', rawVelocity);
+          // trend_update 可能包含 velocity 数据
+          // 只在有有效的 velocity 值时才记录
+          if (payload.raw) {
+            // 如果是原始字符串，尝试解析
+            try {
+              const parsed = JSON.parse(payload.raw);
+              if (parsed.metadata?.velocity && typeof parsed.metadata.velocity === 'number') {
+                console.log('[VKS] trend_update velocity:', parsed.metadata.velocity);
+              }
+            } catch (e) {
+              // 忽略解析失败
+            }
           }
         } catch (e) {
           console.error('[VKS] 解析 trend_update 失败:', e);
@@ -157,13 +164,13 @@ export const useTrendData = () => {
 
   // 初始化
   useEffect(() => {
-    // 初始化历史数据（用于图表显示）
+    // 初始化历史数据（用于图表显示），初始值为 0
     const initialData: VKSDataPoint[] = [];
     const now = Date.now();
     for (let i = 20; i >= 0; i--) {
       initialData.push({
         time: new Date(now - i * 1000).toLocaleTimeString([], { hour12: false, minute: '2-digit', second: '2-digit' }),
-        vks: 45 + Math.random() * 10,
+        vks: 0,
         velocity: 0,
         acceleration: 0
       });
@@ -173,32 +180,24 @@ export const useTrendData = () => {
     // 尝试连接后端
     connectToBackend();
 
-    // 模拟数据后备方案：如果 5 秒内没有收到后端数据，启动模拟模式
-    const fallbackTimer = setTimeout(() => {
-      if (dataSource === 'simulation') {
-        console.log('[VKS] 使用模拟数据模式');
-      }
-    }, 5000);
-
-    // 模拟数据定时器（当后端不可用时使用）
-    const simulationInterval = setInterval(() => {
-      // 只有在未连接后端时才使用模拟数据
-      if (connectionStatus !== 'connected') {
-        setData(prev => {
-          const newPoint = generateSimulatedPoint(prev);
-          setCurrentVKS(newPoint.vks);
-
-          const newData = [...prev, newPoint];
-          if (newData.length > 60) newData.shift();
-          return newData;
-        });
-      }
+    // 每秒更新图表，没有数据时显示 0
+    const tickInterval = setInterval(() => {
+      setData(prev => {
+        const newPoint: VKSDataPoint = {
+          time: new Date().toLocaleTimeString([], { hour12: false, minute: '2-digit', second: '2-digit' }),
+          vks: 0,
+          velocity: 0,
+          acceleration: 0
+        };
+        const newData = [...prev, newPoint];
+        if (newData.length > 60) newData.shift();
+        return newData;
+      });
     }, 1000);
 
     // 清理函数
     return () => {
-      clearTimeout(fallbackTimer);
-      clearInterval(simulationInterval);
+      clearInterval(tickInterval);
 
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);

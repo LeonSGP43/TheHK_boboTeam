@@ -88,8 +88,27 @@ const App: React.FC = () => {
   useEffect(() => {
     document.documentElement.classList.add('dark');
     const initData = async () => {
-        await handleSearch("Trending Visual Styles AI Filters"); 
-        setIsDataReady(true);
+        try {
+            // 检查 API Key 是否存在
+            if (!checkApiKey()) {
+                console.warn('API Key not configured, skipping initial search');
+                setIsDataReady(true);
+                return;
+            }
+            
+            // 设置超时，防止无限等待
+            const timeoutId = setTimeout(() => {
+                console.warn('Initial search timeout, marking as ready');
+                setIsDataReady(true);
+            }, 10000); // 10 秒超时
+            
+            await handleSearch("Trending Visual Styles AI Filters");
+            clearTimeout(timeoutId);
+        } catch (error) {
+            console.error('Initial search failed:', error);
+        } finally {
+            setIsDataReady(true);
+        }
     };
     initData();
   }, []);

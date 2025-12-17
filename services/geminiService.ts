@@ -4,7 +4,7 @@ import { TrendItem, AnalysisResult, TrendReportItem } from "../types";
 import { SocialSignal } from "./tikHubService";
 import { KEYWORD_DICTIONARY_PROMPT } from "../constants";
 
-const apiKey = process.env.API_KEY || '';
+const apiKey = (process.env.API_KEY || process.env.VITE_API_KEY || '');
 const ai = new GoogleGenAI({ apiKey });
 
 export const checkApiKey = () => !!apiKey;
