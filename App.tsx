@@ -8,12 +8,13 @@ import AnalysisPanel from './components/AnalysisPanel';
 import { AnimatedBackground } from './components/layout/AnimatedBackground';
 import { IntroLoader } from './components/layout/IntroLoader';
 import { Dashboard } from './components/admin/Dashboard';
+import { SpiderServerDoc } from './components/SpiderServerDoc';
 import { TRANSLATIONS } from './i18n';
 import {
     Flame, BrainCircuit, AlertTriangle, Search, Zap,
     Twitter, Linkedin, Video, MessageCircle, Youtube, Globe, LayoutGrid,
     Instagram, Facebook, Moon, Sun, Languages, ArrowUpLeft, RefreshCw, Loader2,
-    List, Grid, Box, CornerDownLeft, Activity
+    List, Grid, Box, CornerDownLeft, Activity, BookOpen
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -81,6 +82,7 @@ const App: React.FC = () => {
 
   const [lang, setLang] = useState<Lang>('en');
   const [theme, setTheme] = useState<Theme>('dark');
+  const [showSpiderDoc, setShowSpiderDoc] = useState(false);
 
   const t = TRANSLATIONS[lang];
   const PLATFORMS = getPlatforms(t);
@@ -285,6 +287,15 @@ const App: React.FC = () => {
                       >
                           <Activity size={18} />
                       </button>
+                      <div className="w-px h-4 bg-black/10 dark:bg-white/10 transition-colors"/>
+                      {/* 爬虫服务文档按钮 */}
+                      <button
+                          onClick={() => setShowSpiderDoc(true)}
+                          className="text-slate-500 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                          title="爬虫服务文档"
+                      >
+                          <BookOpen size={18} />
+                      </button>
                   </div>
                   <button onClick={handleLoadMore} disabled={isLoadingMore} className="w-10 h-10 rounded-full bg-pulse/10 hover:bg-pulse/20 text-pulse flex items-center justify-center transition-all border border-pulse/20">
                       <RefreshCw size={16} className={isLoadingMore ? "animate-spin" : ""} />
@@ -457,6 +468,9 @@ const App: React.FC = () => {
           )}
 
       </div>
+
+      {/* 爬虫服务文档模态框 */}
+      <SpiderServerDoc isOpen={showSpiderDoc} onClose={() => setShowSpiderDoc(false)} />
     </div>
   );
 };
