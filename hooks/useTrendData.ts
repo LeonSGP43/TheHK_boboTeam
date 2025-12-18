@@ -8,7 +8,18 @@ export interface VKSDataPoint {
   vks: number;
   velocity: number;
   acceleration: number;
-  hashtag?: string;  // 新增：当前监控的 hashtag
+  hashtag?: string;      // 当前监控的 hashtag
+  platform?: string;     // 数据来源平台
+  author?: string;       // 作者
+  description?: string;  // 内容描述
+  post_id?: string;      // 帖子 ID
+  metrics?: {            // 原始指标
+    views: number;
+    likes: number;
+    comments: number;
+    shares: number;
+    saves: number;
+  };
 }
 
 // SSE 连接状态
@@ -18,6 +29,8 @@ export const useTrendData = () => {
   const [data, setData] = useState<VKSDataPoint[]>([]);
   const [currentVKS, setCurrentVKS] = useState(0);
   const [currentHashtag, setCurrentHashtag] = useState<string>('');
+  const [currentPlatform, setCurrentPlatform] = useState<string>('');
+  const [currentAuthor, setCurrentAuthor] = useState<string>('');
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
   const [dataSource, setDataSource] = useState<'backend' | 'simulation'>('simulation');
 
@@ -91,13 +104,20 @@ export const useTrendData = () => {
             vks: Math.round(normalizedVKS),
             velocity: Math.round(velocity * 10) / 10,  // 保留一位小数
             acceleration: Math.round(acceleration * 10) / 10,
-            hashtag: payload.hashtag
+            hashtag: payload.hashtag,
+            platform: payload.platform,
+            author: payload.author,
+            description: payload.description,
+            post_id: payload.post_id,
+            metrics: payload.metrics
           };
 
           setCurrentVKS(Math.round(normalizedVKS));
           setCurrentHashtag(payload.hashtag || '');
+          setCurrentPlatform(payload.platform || '');
+          setCurrentAuthor(payload.author || '');
 
-          setData(prev => {
+          setData((prev: VKSDataPoint[]) => {
             const newData = [...prev, newPoint];
             // 保留最近 60 个数据点
             if (newData.length > 60) newData.shift();
@@ -182,7 +202,7 @@ export const useTrendData = () => {
 
     // 每秒更新图表，没有数据时显示 0
     const tickInterval = setInterval(() => {
-      setData(prev => {
+      setData((prev: VKSDataPoint[]) => {
         const newPoint: VKSDataPoint = {
           time: new Date().toLocaleTimeString([], { hour12: false, minute: '2-digit', second: '2-digit' }),
           vks: 0,
@@ -214,6 +234,8 @@ export const useTrendData = () => {
     data,
     currentVKS,
     currentHashtag,
+    currentPlatform,
+    currentAuthor,
     connectionStatus,
     dataSource,
     // 手动重连方法

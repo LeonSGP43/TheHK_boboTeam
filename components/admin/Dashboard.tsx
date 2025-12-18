@@ -19,7 +19,7 @@ const CONNECTION_STATUS_CONFIG: Record<ConnectionStatus, { color: string; text: 
 
 export function Dashboard() {
   // 从 hook 获取完整的状态数据
-  const { data, currentVKS, currentHashtag, connectionStatus, dataSource, reconnect } = useTrendData();
+  const { data, currentVKS, currentHashtag, currentPlatform, currentAuthor, connectionStatus, dataSource, reconnect } = useTrendData();
   const [showKillModal, setShowKillModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'vks' | 'logs'>('vks');
 
@@ -61,10 +61,20 @@ export function Dashboard() {
             }`}>
               {dataSource === 'backend' ? '🔴 LIVE DATA' : '⚡ SIMULATION'}
             </span>
-            {/* 当前监控的 hashtag */}
+            {/* 当前监控的 hashtag 和平台 */}
             {currentHashtag && (
               <span className="text-[10px] font-mono text-pulse">
                 监控: {currentHashtag}
+              </span>
+            )}
+            {currentPlatform && (
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-900/30 text-blue-400 border border-blue-500/30">
+                📱 {currentPlatform.toUpperCase()}
+              </span>
+            )}
+            {currentAuthor && (
+              <span className="text-[10px] font-mono text-slate-400">
+                @{currentAuthor}
               </span>
             )}
             {/* 重连按钮（仅在错误状态显示） */}
@@ -160,6 +170,9 @@ export function Dashboard() {
                     Real-time Kinetic Monitor
                     {currentHashtag && (
                       <span className="text-spark font-mono">{currentHashtag}</span>
+                    )}
+                    {currentPlatform && (
+                      <span className="text-blue-400 font-mono ml-2">| {currentPlatform}</span>
                     )}
                 </h3>
                 <span className="text-[10px] text-slate-500 font-mono">
