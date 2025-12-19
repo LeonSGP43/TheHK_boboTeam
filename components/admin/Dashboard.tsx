@@ -6,7 +6,8 @@ import { ActiveOps } from './ActiveOps'; // Replaced TaskTable
 import { LogsViewer } from './LogsViewer';
 import { TrendIgnitionWidget } from './TrendIgnitionWidget';
 import { VKSSpark } from '../../components/effects/VKSSpark';
-import { Activity, Radio, AlertTriangle, Power, Zap, Network, Wifi, WifiOff, RefreshCw, Terminal } from 'lucide-react';
+import { HistoryRankings } from './HistoryRankings';
+import { Activity, Radio, AlertTriangle, Power, Zap, Network, Wifi, WifiOff, RefreshCw, Terminal, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // 连接状态显示配置
@@ -21,7 +22,7 @@ export function Dashboard() {
   // 从 hook 获取完整的状态数据
   const { data, currentVKS, currentHashtag, currentPlatform, currentAuthor, connectionStatus, dataSource, reconnect } = useTrendData();
   const [showKillModal, setShowKillModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'vks' | 'logs'>('vks');
+  const [activeTab, setActiveTab] = useState<'vks' | 'rankings' | 'logs'>('vks');
 
   // 获取连接状态配置
   const statusConfig = CONNECTION_STATUS_CONFIG[connectionStatus];
@@ -147,6 +148,17 @@ export function Dashboard() {
           VKS 监控
         </button>
         <button
+          onClick={() => setActiveTab('rankings')}
+          className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+            activeTab === 'rankings'
+              ? 'bg-yellow-500 text-black shadow-lg'
+              : 'bg-card/50 text-slate-400 hover:text-slate-200 border border-white/5'
+          }`}
+        >
+          <Trophy size={16} />
+          历史排名
+        </button>
+        <button
           onClick={() => setActiveTab('logs')}
           className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
             activeTab === 'logs'
@@ -186,6 +198,13 @@ export function Dashboard() {
           {/* Active Ops Dashboard Table */}
           <div className="h-[500px] relative z-10">
              <ActiveOps />
+          </div>
+        </>
+      ) : activeTab === 'rankings' ? (
+        <>
+          {/* 历史排名 */}
+          <div className="flex-1 relative z-10">
+            <HistoryRankings />
           </div>
         </>
       ) : (

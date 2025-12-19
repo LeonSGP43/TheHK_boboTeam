@@ -10,10 +10,14 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
-        hmr: isProduction ? false : {
-          host: 'localhost',
-          port: 3000,
-          protocol: 'ws'
+        // 简化 HMR 配置，让 Vite 自动处理
+        hmr: !isProduction,
+        // 代理配置（用于普通 API 请求，SSE 直接连接后端）
+        proxy: {
+          '/api': {
+            target: 'http://localhost:8000',
+            changeOrigin: true,
+          }
         }
       },
       plugins: [react()],

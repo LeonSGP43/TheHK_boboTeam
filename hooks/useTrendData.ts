@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-// 后端 API 地址配置
-const BACKEND_URL = (process.env.BACKEND_URL || process.env.VITE_BACKEND_URL || 'http://localhost:8000');
+// 后端 URL - SSE 不能使用代理，必须直接连接
+const BACKEND_URL = import.meta.env?.VITE_BACKEND_URL || "http://localhost:8000";
 
 export interface VKSDataPoint {
   time: string;

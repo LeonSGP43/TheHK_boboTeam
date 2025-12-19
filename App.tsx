@@ -6,15 +6,17 @@ import TrendListItem from './components/TrendListItem';
 import TrendGalleryCard from './components/TrendGalleryCard';
 import AnalysisPanel from './components/AnalysisPanel';
 import { AnimatedBackground } from './components/layout/AnimatedBackground';
-import { IntroLoader } from './components/layout/IntroLoader';
+import { CrawlLoader } from './components/layout/CrawlLoader';
+import { useRankings, RankedItem } from './hooks/useRankings';
 import { Dashboard } from './components/admin/Dashboard';
 import { SpiderServerDoc } from './components/SpiderServerDoc';
+import { RankingPanel } from './components/RankingPanel';
 import { TRANSLATIONS } from './i18n';
 import {
     Flame, BrainCircuit, AlertTriangle, Search, Zap,
     Twitter, Linkedin, Video, MessageCircle, Youtube, Globe, LayoutGrid,
     Instagram, Facebook, Moon, Sun, Languages, ArrowUpLeft, RefreshCw, Loader2,
-    List, Grid, Box, CornerDownLeft, Activity, BookOpen
+    List, Grid, Box, CornerDownLeft, Activity, BookOpen, Trophy
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -63,8 +65,10 @@ const ButterflyIcon = ({ className }: { className?: string }) => (
 
 const App: React.FC = () => {
   const [loadingApp, setLoadingApp] = useState(true);
-  const [isDataReady, setIsDataReady] = useState(false);
   const [currentPage, setCurrentPage] = useState<PageView>('search');
+  
+  // 排名数据
+  const { rankings, getPlatformRanking, getGlobalRanking, refresh: refreshRankings } = useRankings(true, 30000);
 
   const [trends, setTrends] = useState<TrendItem[]>([]);
   const [selectedTrend, setSelectedTrend] = useState<TrendItem | null>(null);
@@ -76,6 +80,7 @@ const App: React.FC = () => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [feedMode, setFeedMode] = useState<'trends' | 'rankings'>('trends');
   
   const searchInputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null); 
@@ -89,30 +94,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     document.documentElement.classList.add('dark');
-    const initData = async () => {
-        try {
-            // 检查 API Key 是否存在
-            if (!checkApiKey()) {
-                console.warn('API Key not configured, skipping initial search');
-                setIsDataReady(true);
-                return;
-            }
-            
-            // 设置超时，防止无限等待
-            const timeoutId = setTimeout(() => {
-                console.warn('Initial search timeout, marking as ready');
-                setIsDataReady(true);
-            }, 10000); // 10 秒超时
-            
-            await handleSearch("Trending Visual Styles AI Filters");
-            clearTimeout(timeoutId);
-        } catch (error) {
-            console.error('Initial search failed:', error);
-        } finally {
-            setIsDataReady(true);
-        }
-    };
-    initData();
   }, []);
 
   useEffect(() => {
@@ -218,7 +199,15 @@ const App: React.FC = () => {
     <div className="flex h-screen bg-transparent font-sans text-text overflow-hidden relative transition-colors duration-700">
       
       <AnimatePresence>
-          {loadingApp && <IntroLoader isDataReady={isDataReady} onComplete={() => setLoadingApp(false)} />}
+          {loadingApp && <CrawlLoader onComplete={() => {
+              setLoadingApp(false);
+              // 加载完成后刷新排名数据
+              refreshRankings();
+              // 加载完成后自动执行初始搜索
+              if (checkApiKey()) {
+                  handleSearch("Trending Visual Styles AI Filters");
+              }
+          }} />}
       </AnimatePresence>
       
       <AnimatedBackground theme={theme} />
@@ -297,8 +286,13 @@ const App: React.FC = () => {
                           <BookOpen size={18} />
                       </button>
                   </div>
-                  <button onClick={handleLoadMore} disabled={isLoadingMore} className="w-10 h-10 rounded-full bg-pulse/10 hover:bg-pulse/20 text-pulse flex items-center justify-center transition-all border border-pulse/20">
-                      <RefreshCw size={16} className={isLoadingMore ? "animate-spin" : ""} />
+                  <button 
+                      onClick={() => setLoadingApp(true)} 
+                      disabled={loadingApp}
+                      className="w-10 h-10 rounded-full bg-spark/10 hover:bg-spark/20 text-spark flex items-center justify-center transition-all border border-spark/20"
+                      title="重新爬取数据"
+                  >
+                      <RefreshCw size={16} className={loadingApp ? "animate-spin" : ""} />
                   </button>
               </div>
           </header>
@@ -318,45 +312,82 @@ const App: React.FC = () => {
                   <div className="p-8 border-b border-black/5 dark:border-white/5 flex justify-between items-end bg-gradient-to-b from-black/5 to-transparent dark:from-white/5 transition-colors">
                       <div>
                           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2 block">
-                              Incoming Stream
+                              {feedMode === 'rankings' ? 'Score Rankings' : 'Incoming Stream'}
                           </span>
                           <h2 className="text-2xl font-bold text-zinc-900 dark:text-white tracking-tight flex items-center gap-3 transition-colors">
-                              {activePlatform === 'ALL' ? 'Global Feed' : activePlatform}
+                              {activePlatform === 'ALL' ? (feedMode === 'rankings' ? 'Global Rankings' : 'Global Feed') : activePlatform}
                               <span className="text-sm font-mono text-pulse bg-pulse/10 px-2 py-1 rounded-md border border-pulse/20">
-                                  {filteredTrends.length}
+                                  {feedMode === 'rankings' 
+                                    ? ((rankings[activePlatform] as any)?.total || Object.values(rankings).reduce((sum, p: any) => sum + (p?.total || 0), 0))
+                                    : filteredTrends.length
+                                  }
                               </span>
                           </h2>
                       </div>
-                      <div className="flex bg-black/5 dark:bg-black/20 rounded-xl p-1 border border-black/5 dark:border-white/5 backdrop-blur-sm transition-colors">
-                          <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-zinc-900 dark:hover:text-white'}`}><List size={16} /></button>
-                          <button onClick={() => setViewMode('gallery')} className={`p-2 rounded-lg transition-all ${viewMode === 'gallery' ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-zinc-900 dark:hover:text-white'}`}><Grid size={16} /></button>
+                      <div className="flex gap-2">
+                          {/* 趋势/排名切换 */}
+                          <div className="flex bg-black/5 dark:bg-black/20 rounded-xl p-1 border border-black/5 dark:border-white/5 backdrop-blur-sm transition-colors">
+                              <button 
+                                  onClick={() => setFeedMode('trends')} 
+                                  className={`p-2 rounded-lg transition-all ${feedMode === 'trends' ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-zinc-900 dark:hover:text-white'}`}
+                                  title="趋势流"
+                              >
+                                  <Flame size={16} />
+                              </button>
+                              <button 
+                                  onClick={() => { setFeedMode('rankings'); refreshRankings(); }} 
+                                  className={`p-2 rounded-lg transition-all ${feedMode === 'rankings' ? 'bg-yellow-500 text-black shadow-lg' : 'text-slate-500 hover:text-zinc-900 dark:hover:text-white'}`}
+                                  title="分数排名"
+                              >
+                                  <Trophy size={16} />
+                              </button>
+                          </div>
+                          {/* 视图模式切换（仅在趋势模式显示） */}
+                          {feedMode === 'trends' && (
+                              <div className="flex bg-black/5 dark:bg-black/20 rounded-xl p-1 border border-black/5 dark:border-white/5 backdrop-blur-sm transition-colors">
+                                  <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-zinc-900 dark:hover:text-white'}`}><List size={16} /></button>
+                                  <button onClick={() => setViewMode('gallery')} className={`p-2 rounded-lg transition-all ${viewMode === 'gallery' ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-zinc-900 dark:hover:text-white'}`}><Grid size={16} /></button>
+                              </div>
+                          )}
                       </div>
                   </div>
 
-                  <div ref={listRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-8 space-y-10 no-scrollbar mask-gradient-b">
-                      <section>
-                          <div className="flex items-center gap-3 mb-6">
-                              <div className="p-2 bg-spark/10 rounded-lg"><Flame size={18} className="text-spark" /></div>
-                              <h3 className="text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest transition-colors">{t.sectionTrending}</h3>
-                          </div>
-                          {renderTrendSection(trendingNow, 'trending')}
-                      </section>
-                      <section>
-                          <div className="flex items-center gap-3 mb-6 pt-6 border-t border-black/5 dark:border-white/5 transition-colors">
-                              <div className="p-2 bg-pulse/10 rounded-lg"><BrainCircuit size={18} className="text-pulse" /></div>
-                              <h3 className="text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest transition-colors">{t.sectionOpportunity}</h3>
-                          </div>
-                          {renderTrendSection(agents, 'agent')}
-                      </section>
-                      <section>
-                          <div className="flex items-center gap-3 mb-6 pt-6 border-t border-black/5 dark:border-white/5 transition-colors">
-                              <div className="p-2 bg-yellow-500/10 rounded-lg"><AlertTriangle size={18} className="text-yellow-500" /></div>
-                              <h3 className="text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest transition-colors">{t.sectionRisk}</h3>
-                          </div>
-                          {renderTrendSection(risks, 'risk')}
-                      </section>
-                      <div className="h-20" />
-                  </div>
+                  {/* 根据模式显示不同内容 */}
+                  {feedMode === 'rankings' ? (
+                      <RankingPanel 
+                          rankings={rankings} 
+                          activePlatform={activePlatform}
+                          onSelectItem={(item) => {
+                              // 可以在这里处理选中排名项的逻辑
+                              console.log('Selected ranking item:', item);
+                          }}
+                      />
+                  ) : (
+                      <div ref={listRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-8 space-y-10 no-scrollbar mask-gradient-b">
+                          <section>
+                              <div className="flex items-center gap-3 mb-6">
+                                  <div className="p-2 bg-spark/10 rounded-lg"><Flame size={18} className="text-spark" /></div>
+                                  <h3 className="text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest transition-colors">{t.sectionTrending}</h3>
+                              </div>
+                              {renderTrendSection(trendingNow, 'trending')}
+                          </section>
+                          <section>
+                              <div className="flex items-center gap-3 mb-6 pt-6 border-t border-black/5 dark:border-white/5 transition-colors">
+                                  <div className="p-2 bg-pulse/10 rounded-lg"><BrainCircuit size={18} className="text-pulse" /></div>
+                                  <h3 className="text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest transition-colors">{t.sectionOpportunity}</h3>
+                              </div>
+                              {renderTrendSection(agents, 'agent')}
+                          </section>
+                          <section>
+                              <div className="flex items-center gap-3 mb-6 pt-6 border-t border-black/5 dark:border-white/5 transition-colors">
+                                  <div className="p-2 bg-yellow-500/10 rounded-lg"><AlertTriangle size={18} className="text-yellow-500" /></div>
+                                  <h3 className="text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest transition-colors">{t.sectionRisk}</h3>
+                              </div>
+                              {renderTrendSection(risks, 'risk')}
+                          </section>
+                          <div className="h-20" />
+                      </div>
+                  )}
               </div>
 
               {/* ANALYSIS ISLAND (Right) */}
