@@ -80,7 +80,7 @@ const App: React.FC = () => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [feedMode, setFeedMode] = useState<'trends' | 'rankings'>('trends');
+  const [feedMode, setFeedMode] = useState<'trends' | 'rankings'>('rankings');
   
   const searchInputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null); 
