@@ -25,11 +25,21 @@ export interface RankedItem {
         R: number;
     };
     author: string;
-    description: string;
+    title: string;        // 帖子标题
+    description: string;  // 帖子描述
     post_id: string;
     lifecycle: string;
     priority: string;
     rank: number;
+    content_url?: string;
+    cover_url?: string;
+    // 新增字段
+    post_count?: number;
+    activity?: {
+        freshness_rate: number;
+        activity_level: string;
+        new_posts: number;
+    };
 }
 
 export interface PlatformRanking {
@@ -59,7 +69,7 @@ export const useRankings = (autoRefresh: boolean = true, refreshInterval: number
     const fetchRankings = useCallback(async () => {
         try {
             const [rankingsRes, statsRes] = await Promise.all([
-                fetch(`${BACKEND_URL}/api/history/rankings?top_n=20`),
+                fetch(`${BACKEND_URL}/api/history/rankings?top_n=100`),
                 fetch(`${BACKEND_URL}/api/history/stats`)
             ]);
 

@@ -110,6 +110,25 @@ const RankingItem: React.FC<{
     const PlatformIcon = PLATFORM_ICONS[item.platform] || Activity;
     const platformColor = PLATFORM_COLORS[item.platform] || 'text-slate-400';
     
+    // 提取显示标题：优先使用 title，其次 description
+    const displayTitle = (() => {
+        // 优先使用 title 字段
+        if (item.title && item.title.length > 0) {
+            const title = item.title.slice(0, 60);
+            return title.length < item.title.length ? `${title}...` : title;
+        }
+        // 其次使用 description
+        if (item.description && item.description.length > 0) {
+            const desc = item.description.slice(0, 60);
+            return desc.length < item.description.length ? `${desc}...` : desc;
+        }
+        // 最后使用 hashtag
+        return item.hashtag || 'Unknown';
+    })();
+    
+    // 显示作者信息
+    const authorInfo = item.author && item.author !== 'unknown' ? `@${item.author}` : null;
+    
     return (
         <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -124,8 +143,8 @@ const RankingItem: React.FC<{
                 {/* 内容 */}
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-bold text-white truncate">
-                            {item.hashtag}
+                        <span className="text-sm font-bold text-white truncate" title={item.description}>
+                            {displayTitle}
                         </span>
                         {showPlatform && (
                             <PlatformIcon size={14} className={platformColor} />
@@ -135,11 +154,17 @@ const RankingItem: React.FC<{
                         )}
                     </div>
                     
-                    {item.description && (
-                        <p className="text-[10px] text-slate-500 truncate mb-1.5">
-                            {item.description}
-                        </p>
-                    )}
+                    {/* 显示 hashtag 和作者 */}
+                    <div className="flex items-center gap-2 mb-1.5">
+                        <span className="text-[10px] text-pulse font-medium">
+                            {item.hashtag}
+                        </span>
+                        {authorInfo && (
+                            <span className="text-[10px] text-slate-500">
+                                {authorInfo}
+                            </span>
+                        )}
+                    </div>
                     
                     <ScoreBar score={item.trend_score} />
                 </div>
@@ -180,13 +205,30 @@ export const RankingPanel: React.FC<RankingPanelProps> = ({
     const [expanded, setExpanded] = useState(true);
     
     // 获取当前平台的排名数据
-    const currentRankings = activePlatform === 'ALL' 
-        ? (Object.values(rankings) as PlatformRankingData[])
-            .flatMap(p => p.records)
-            .sort((a, b) => b.trend_score - a.trend_score)
-            .slice(0, 20)
-            .map((item, index) => ({ ...item, rank: index + 1 }))
-        : (rankings[activePlatform] as PlatformRankingData | undefined)?.records || [];
+    const currentRankings: RankedItem[] = (() => {
+        if (!rankings || typeof rankings !== 'object') {
+            return [];
+        }
+        
+        if (activePlatform === 'ALL') {
+            const allRecords = Object.values(rankings)
+                .filter((p): p is PlatformRankingData => 
+                    p != null && typeof p === 'object' && Array.isArray((p as any).records)
+                )
+                .flatMap(p => p.records || [])
+                .filter((item): item is RankedItem => item != null && item.trend_score !== undefined)
+                .sort((a, b) => (b.trend_score || 0) - (a.trend_score || 0))
+                .slice(0, 20)
+                .map((item, index) => ({ ...item, rank: index + 1 }));
+            return allRecords;
+        }
+        
+        const platformData = rankings[activePlatform];
+        if (platformData && Array.isArray(platformData.records)) {
+            return platformData.records;
+        }
+        return [];
+    })();
     
     if (currentRankings.length === 0) {
         return (
