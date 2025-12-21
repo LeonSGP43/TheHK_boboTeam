@@ -9,6 +9,7 @@ import { AnimatedBackground } from './components/layout/AnimatedBackground';
 import { CrawlLoader } from './components/layout/CrawlLoader';
 import { useRankings, RankedItem } from './hooks/useRankings';
 import { Dashboard } from './components/admin/Dashboard';
+import { AdminPage } from './components/admin/AdminPage';
 import { SpiderServerDoc } from './components/SpiderServerDoc';
 import { RankingPanel } from './components/RankingPanel';
 import { TRANSLATIONS } from './i18n';
@@ -16,12 +17,12 @@ import {
     Flame, BrainCircuit, AlertTriangle, Search, Zap,
     Twitter, Linkedin, Video, MessageCircle, Youtube, Globe, LayoutGrid,
     Instagram, Facebook, Moon, Sun, Languages, ArrowUpLeft, RefreshCw, Loader2,
-    List, Grid, Box, CornerDownLeft, Activity, BookOpen, Trophy
+    List, Grid, Box, CornerDownLeft, Activity, BookOpen, Trophy, Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // --- CONFIG ---
-type PageView = 'search' | 'dashboard';
+type PageView = 'search' | 'dashboard' | 'admin';
 type Lang = 'en' | 'zh';
 type Theme = 'dark' | 'light';
 type ViewMode = 'list' | 'gallery';
@@ -277,6 +278,15 @@ const App: React.FC = () => {
                           <Activity size={18} />
                       </button>
                       <div className="w-px h-4 bg-black/10 dark:bg-white/10 transition-colors"/>
+                      {/* 系统管理按钮 */}
+                      <button
+                          onClick={() => setCurrentPage('admin')}
+                          className={`transition-colors ${currentPage === 'admin' ? 'text-purple-500' : 'text-slate-500 hover:text-zinc-900 dark:hover:text-white'}`}
+                          title="系统管理"
+                      >
+                          <Settings size={18} />
+                      </button>
+                      <div className="w-px h-4 bg-black/10 dark:bg-white/10 transition-colors"/>
                       {/* 爬虫服务文档按钮 */}
                       <button
                           onClick={() => setShowSpiderDoc(true)}
@@ -298,7 +308,9 @@ const App: React.FC = () => {
           </header>
 
           {/* 根据 currentPage 显示不同内容 */}
-          {currentPage === 'dashboard' ? (
+          {currentPage === 'admin' ? (
+              <AdminPage onBack={() => setCurrentPage('search')} />
+          ) : currentPage === 'dashboard' ? (
               <div className="flex-1 overflow-hidden">
                   <Dashboard />
               </div>
