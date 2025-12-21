@@ -2,7 +2,7 @@ name: Deploy Frontend
 
 on:
   push:
-    branches: [Leon]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: Leon
+          ref: main
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -39,10 +39,10 @@ jobs:
           script: |
             cd ${{ secrets.DEPLOY_PATH }}/TheHK_boboTeam
             
-            # 拉取最新代码（Leon 分支）
+            # 拉取最新代码（main 分支）
             git fetch origin
-            git checkout Leon
-            git pull origin Leon
+            git checkout main
+            git pull origin main
             
             # 安装依赖并构建
             npm ci
