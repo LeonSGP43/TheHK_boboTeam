@@ -309,7 +309,9 @@ const App: React.FC = () => {
 
           {/* 根据 currentPage 显示不同内容 */}
           {currentPage === 'admin' ? (
-              <AdminPage onBack={() => setCurrentPage('search')} />
+              <div className="flex-1 min-h-0 overflow-hidden">
+                  <AdminPage onBack={() => setCurrentPage('search')} />
+              </div>
           ) : currentPage === 'dashboard' ? (
               <div className="flex-1 overflow-hidden">
                   <Dashboard />

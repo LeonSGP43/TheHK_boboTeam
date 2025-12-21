@@ -5,10 +5,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Settings, Save, RefreshCw, Tag, ToggleLeft, ToggleRight, Clock, 
-  Loader2, CheckCircle, XCircle, Zap, Play, Square, Activity,
-  Server, Database, Wifi, WifiOff, ArrowLeft, Terminal, Trash2,
-  Plus, AlertTriangle, FlaskConical, X
+  Settings, Tag, ToggleLeft, ToggleRight, Clock, 
+  Loader2, CheckCircle, XCircle,
+  Server, Database, ArrowLeft, Terminal, Trash2,
+  Plus, AlertTriangle, FlaskConical
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -39,7 +39,6 @@ interface Props {
 export function AdminPage({ onBack }: Props) {
   const [configs, setConfigs] = useState<Record<string, ConfigItem>>({});
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [newTag, setNewTag] = useState('');
@@ -98,7 +97,6 @@ export function AdminPage({ onBack }: Props) {
 
   // 保存配置（不刷新整个列表，直接更新本地状态）
   const saveConfig = async (key: string, value: any) => {
-    setSaving(true);
     try {
       const res = await fetch(`${BACKEND_URL}/api/config/${key}`, {
         method: 'PUT',
@@ -108,32 +106,16 @@ export function AdminPage({ onBack }: Props) {
       const data = await res.json();
       if (data.success) {
         // 直接更新本地状态，避免闪烁
-        setConfigs(prev => ({
+        setConfigs((prev: Record<string, ConfigItem>) => ({
           ...prev,
           [key]: { ...prev[key], value, updated_at: new Date().toISOString() }
         }));
         showSuccess(`已保存`);
       }
-    } catch (e) {
+    } catch {
       showError('保存失败');
       // 失败时重新加载
       loadConfigs();
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // 同步配置到爬虫
-  const syncToSpider = async () => {
-    try {
-      const res = await fetch(`${SPIDER_URL}/config/refresh`, { method: 'POST' });
-      const data = await res.json();
-      if (data.success) {
-        showSuccess('配置已同步到爬虫');
-        checkSpiderStatus();
-      }
-    } catch {
-      showError('无法连接爬虫服务');
     }
   };
 
@@ -235,9 +217,9 @@ export function AdminPage({ onBack }: Props) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="h-full flex flex-col bg-[#0a0a0f] text-white rounded-[2.5rem] overflow-hidden">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-white/10">
+      <header className="shrink-0 bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
@@ -297,8 +279,147 @@ export function AdminPage({ onBack }: Props) {
         )}
       </AnimatePresence>
 
-      <main className="max-w-6xl mx-auto px-6 py-8 space-y-8">
+      <main className="flex-1 overflow-y-auto min-h-0">
+        <div className="max-w-6xl mx-auto px-6 py-8 space-y-6 pb-20">
         
+        {/* 配置管理 */}
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="animate-spin text-pulse" size={32} />
+          </div>
+        ) : (
+          <>
+            {/* 爬取标签 */}
+            <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
+              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <Tag size={20} />
+                爬取标签
+                {tagsLoading && <Loader2 className="animate-spin text-pulse" size={16} />}
+              </h2>
+              
+              <div className="flex flex-wrap gap-2 mb-4 min-h-[40px]">
+                {tags.length > 0 ? (
+                  tags.map((tag: string) => (
+                    <span
+                      key={tag}
+                      className="px-3 py-1.5 bg-pulse/20 text-pulse rounded-full text-sm flex items-center gap-2 group"
+                    >
+                      #{tag}
+                      <button
+                        onClick={() => removeTag(tag)}
+                        disabled={tagsLoading}
+                        className="opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all disabled:opacity-50"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-slate-500 text-sm py-1.5">暂无标签，请添加</span>
+                )}
+              </div>
+              
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && !tagsLoading && addTag()}
+                  placeholder="输入标签名称..."
+                  disabled={tagsLoading}
+                  className="flex-1 px-4 py-2 bg-black/30 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-pulse disabled:opacity-50"
+                />
+                <button
+                  onClick={addTag}
+                  disabled={tagsLoading || !newTag.trim()}
+                  className="px-4 py-2 bg-pulse text-black font-bold rounded-lg hover:bg-pulse/80 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {tagsLoading ? <Loader2 className="animate-spin" size={16} /> : <Plus size={16} />}
+                  添加
+                </button>
+              </div>
+            </section>
+
+            {/* 爬虫模式 */}
+            <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
+              <h2 className="text-lg font-bold mb-4">爬虫模式</h2>
+              
+              <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl">
+                <div>
+                  <p className="font-medium">Mock 模式</p>
+                  <p className="text-xs text-slate-500">开启后使用本地数据，不消耗 API 额度</p>
+                </div>
+                <button
+                  onClick={() => toggleConfig('spider.use_mock')}
+                  className={`p-2 rounded-lg transition-colors ${useMock ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-400'}`}
+                >
+                  {useMock ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+                </button>
+              </div>
+              <p className="text-xs text-slate-600 mt-2">* 配置修改后自动保存，爬虫运行时会自动拉取最新配置</p>
+            </section>
+
+            {/* 爬取参数 */}
+            <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
+              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <Clock size={20} />
+                爬取参数
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs text-slate-500 block mb-2">每标签帖子数</label>
+                  <input
+                    type="number"
+                    value={limit}
+                    onChange={(e) => saveConfig('spider.limit', parseInt(e.target.value) || 20)}
+                    className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-lg text-white focus:outline-none focus:border-pulse"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-slate-500 block mb-2">请求间隔 (毫秒)</label>
+                  <input
+                    type="number"
+                    value={delay}
+                    onChange={(e) => saveConfig('spider.request_delay', parseInt(e.target.value) || 500)}
+                    className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-lg text-white focus:outline-none focus:border-pulse"
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* 平台开关 */}
+            <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
+              <h2 className="text-lg font-bold mb-4">平台开关</h2>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {platforms.map((p) => {
+                  const enabled = configs[p.key]?.value ?? false;
+                  return (
+                    <button
+                      key={p.key}
+                      onClick={() => toggleConfig(p.key)}
+                      className={`p-4 rounded-xl border transition-all flex items-center gap-3 ${
+                        enabled
+                          ? 'bg-white/10 border-white/20 text-white'
+                          : 'bg-black/20 border-white/5 text-slate-500'
+                      }`}
+                    >
+                      <div className={`w-3 h-3 rounded-full ${enabled ? p.color : 'bg-slate-700'}`} />
+                      <span className="font-medium flex-1 text-left">{p.name}</span>
+                      {enabled ? (
+                        <ToggleRight size={20} className="text-green-400" />
+                      ) : (
+                        <ToggleLeft size={20} />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          </>
+        )}
+
         {/* 爬虫测试面板 */}
         <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
           <h2 className="text-lg font-bold mb-2 flex items-center gap-2">
@@ -376,151 +497,7 @@ export function AdminPage({ onBack }: Props) {
           )}
         </section>
 
-        {/* 配置管理 */}
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="animate-spin text-pulse" size={32} />
-          </div>
-        ) : (
-          <>
-            {/* 爬虫模式 */}
-            <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold">爬虫模式</h2>
-                <button
-                  onClick={syncToSpider}
-                  className="px-4 py-2 bg-pulse/20 hover:bg-pulse/30 border border-pulse/50 rounded-lg flex items-center gap-2 text-sm text-pulse transition-colors"
-                >
-                  <Zap size={14} />
-                  同步到爬虫
-                </button>
-              </div>
-              
-              <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl">
-                <div>
-                  <p className="font-medium">Mock 模式</p>
-                  <p className="text-xs text-slate-500">开启后使用本地数据，不消耗 API 额度</p>
-                </div>
-                <button
-                  onClick={() => toggleConfig('spider.use_mock')}
-                  className={`p-2 rounded-lg transition-colors ${useMock ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-400'}`}
-                >
-                  {useMock ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
-                </button>
-              </div>
-            </section>
-
-            {/* 爬取标签 */}
-            <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <Tag size={20} />
-                爬取标签
-                {tagsLoading && <Loader2 className="animate-spin text-pulse" size={16} />}
-              </h2>
-              
-              <div className="flex flex-wrap gap-2 mb-4 min-h-[40px]">
-                {tags.length > 0 ? (
-                  tags.map((tag: string) => (
-                    <span
-                      key={tag}
-                      className="px-3 py-1.5 bg-pulse/20 text-pulse rounded-full text-sm flex items-center gap-2 group"
-                    >
-                      #{tag}
-                      <button
-                        onClick={() => removeTag(tag)}
-                        disabled={tagsLoading}
-                        className="opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all disabled:opacity-50"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-slate-500 text-sm py-1.5">暂无标签，请添加</span>
-                )}
-              </div>
-              
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && !tagsLoading && addTag()}
-                  placeholder="输入标签名称..."
-                  disabled={tagsLoading}
-                  className="flex-1 px-4 py-2 bg-black/30 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-pulse disabled:opacity-50"
-                />
-                <button
-                  onClick={addTag}
-                  disabled={tagsLoading || !newTag.trim()}
-                  className="px-4 py-2 bg-pulse text-black font-bold rounded-lg hover:bg-pulse/80 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {tagsLoading ? <Loader2 className="animate-spin" size={16} /> : <Plus size={16} />}
-                  添加
-                </button>
-              </div>
-            </section>
-
-            {/* 爬取参数 */}
-            <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <Clock size={20} />
-                爬取参数
-              </h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs text-slate-500 block mb-2">每标签帖子数</label>
-                  <input
-                    type="number"
-                    value={limit}
-                    onChange={(e) => saveConfig('spider.limit', parseInt(e.target.value) || 20)}
-                    className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-lg text-white focus:outline-none focus:border-pulse"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-slate-500 block mb-2">请求间隔 (毫秒)</label>
-                  <input
-                    type="number"
-                    value={delay}
-                    onChange={(e) => saveConfig('spider.request_delay', parseInt(e.target.value) || 500)}
-                    className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-lg text-white focus:outline-none focus:border-pulse"
-                  />
-                </div>
-              </div>
-            </section>
-
-            {/* 平台开关 */}
-            <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <h2 className="text-lg font-bold mb-4">平台开关</h2>
-              
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {platforms.map((p) => {
-                  const enabled = configs[p.key]?.value ?? false;
-                  return (
-                    <button
-                      key={p.key}
-                      onClick={() => toggleConfig(p.key)}
-                      className={`p-4 rounded-xl border transition-all flex items-center gap-3 ${
-                        enabled
-                          ? 'bg-white/10 border-white/20 text-white'
-                          : 'bg-black/20 border-white/5 text-slate-500'
-                      }`}
-                    >
-                      <div className={`w-3 h-3 rounded-full ${enabled ? p.color : 'bg-slate-700'}`} />
-                      <span className="font-medium flex-1 text-left">{p.name}</span>
-                      {enabled ? (
-                        <ToggleRight size={20} className="text-green-400" />
-                      ) : (
-                        <ToggleLeft size={20} />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-          </>
-        )}
+        </div>
       </main>
 
       {/* 确认弹窗 */}
