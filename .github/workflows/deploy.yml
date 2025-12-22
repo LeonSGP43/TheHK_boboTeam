@@ -27,6 +27,9 @@ jobs:
       - name: Build
         run: npm run build
         env:
+          VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
+          VITE_SPIDER_URL: ${{ secrets.VITE_SPIDER_URL }}
+          VITE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       - name: Deploy dist to server
