@@ -12,8 +12,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
-const SPIDER_URL = import.meta.env.VITE_SPIDER_URL || 'http://localhost:8001';
+const BACKEND_URL = import.meta.env?.VITE_BACKEND_URL || 'http://localhost:8000';
+const SPIDER_URL = import.meta.env?.VITE_SPIDER_URL || 'http://localhost:8001';
 
 interface ConfigItem {
   value: any;
