@@ -13,9 +13,13 @@ import {
 } from 'lucide-react';
 
 // 在开发环境下使用代理（空字符串），生产环境使用完整 URL
-const BACKEND_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-  ? ""  // 开发环境使用 Vite 代理
-  : (import.meta.env?.VITE_BACKEND_URL || "http://localhost:8000");
+// 生产环境默认 URL
+const PROD_BACKEND_URL = "http://47.101.161.15:8000";
+
+const isLocalDev = typeof window !== 'undefined' && 
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+const BACKEND_URL = isLocalDev ? "" : (import.meta.env?.VITE_BACKEND_URL || PROD_BACKEND_URL);
 
 interface RankedItem {
     id: string;

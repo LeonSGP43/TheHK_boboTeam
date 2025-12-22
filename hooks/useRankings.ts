@@ -7,8 +7,12 @@
 import { useState, useEffect, useCallback } from 'react';
 
 // 在开发环境下使用代理（空字符串），生产环境使用完整 URL
-const isDev = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-const BACKEND_URL = isDev ? "" : (import.meta.env?.VITE_BACKEND_URL || "http://localhost:8000");
+const PROD_BACKEND_URL = "http://47.101.161.15:8000";
+
+const isLocalDev = typeof window !== 'undefined' && 
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+const BACKEND_URL = isLocalDev ? "" : (import.meta.env?.VITE_BACKEND_URL || PROD_BACKEND_URL);
 
 export interface RankedItem {
     id: string;

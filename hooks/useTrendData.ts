@@ -1,7 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 // 后端 URL - SSE 不能使用代理，必须直接连接
-const BACKEND_URL = import.meta.env?.VITE_BACKEND_URL || "http://localhost:8000";
+const PROD_BACKEND_URL = "http://47.101.161.15:8000";
+
+const isLocalDev = typeof window !== 'undefined' && 
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+const BACKEND_URL = isLocalDev ? "http://localhost:8000" : (import.meta.env?.VITE_BACKEND_URL || PROD_BACKEND_URL);
 
 export interface VKSDataPoint {
   time: string;
