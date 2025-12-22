@@ -39,16 +39,22 @@ jobs:
           script: |
             cd ${{ secrets.DEPLOY_PATH }}/TheHK_boboTeam
             
-            # 拉取最新代码（main 分支）
+            # 保存本地 .env 文件
+            cp .env .env.backup || true
+            
+            # 强制拉取最新代码（丢弃本地修改）
             git fetch origin
             git checkout main
-            git pull origin main
+            git reset --hard origin/main
             
-            # 安装依赖并构建
+            # 恢复本地 .env 文件
+            cp .env.backup .env || true
+            
+            # 安装依赖并构建（增加内存限制）
             npm ci
-            npm run build
+            NODE_OPTIONS="--max-old-space-size=2048" npm run build
             
-            # 重启前端服务（先删除再重新启动，确保加载最新构建）
+            # 重启前端服务
             pm2 delete trendpulse-frontend || true
             pm2 serve dist 3000 --name trendpulse-frontend --spa
             
