@@ -48,7 +48,8 @@ jobs:
             npm ci
             npm run build
             
-            # 重启前端服务
-            pm2 restart trendpulse-frontend || pm2 serve dist 3000 --name trendpulse-frontend --spa
+            # 重启前端服务（先删除再重新启动，确保加载最新构建）
+            pm2 delete trendpulse-frontend || true
+            pm2 serve dist 3000 --name trendpulse-frontend --spa
             
             echo "✅ Frontend deployed successfully"
