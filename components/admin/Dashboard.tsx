@@ -2,13 +2,12 @@
 import React, { useState } from 'react';
 import { useTrendData, ConnectionStatus } from '../../hooks/useTrendData';
 import { VKSChart } from './VKSChart';
-import { ActiveOps } from './ActiveOps'; // Replaced TaskTable
 import { LogsViewer } from './LogsViewer';
 import { TrendIgnitionWidget } from './TrendIgnitionWidget';
 import { VKSSpark } from '../../components/effects/VKSSpark';
 import { HistoryRankings } from './HistoryRankings';
 import { ConfigManager } from './ConfigManager';
-import { Activity, Radio, AlertTriangle, Power, Zap, Network, Wifi, WifiOff, RefreshCw, Terminal, Trophy, Settings } from 'lucide-react';
+import { Activity, Radio, AlertTriangle, Power, Network, Wifi, WifiOff, RefreshCw, Terminal, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // 连接状态显示配置
@@ -23,7 +22,7 @@ export function Dashboard() {
   // 从 hook 获取完整的状态数据
   const { data, currentVKS, currentHashtag, currentPlatform, currentAuthor, connectionStatus, dataSource, reconnect } = useTrendData();
   const [showKillModal, setShowKillModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'vks' | 'rankings' | 'logs' | 'config'>('vks');
+  const [activeTab, setActiveTab] = useState<'vks' | 'logs' | 'config'>('vks');
 
   // 获取连接状态配置
   const statusConfig = CONNECTION_STATUS_CONFIG[connectionStatus];
@@ -146,18 +145,7 @@ export function Dashboard() {
           }`}
         >
           <Activity size={16} />
-          VKS 监控
-        </button>
-        <button
-          onClick={() => setActiveTab('rankings')}
-          className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-            activeTab === 'rankings'
-              ? 'bg-yellow-500 text-black shadow-lg'
-              : 'bg-card/50 text-slate-400 hover:text-slate-200 border border-white/5'
-          }`}
-        >
-          <Trophy size={16} />
-          历史排名
+          VKS 监控 & 排名
         </button>
         <button
           onClick={() => setActiveTab('logs')}
@@ -187,7 +175,7 @@ export function Dashboard() {
       {activeTab === 'vks' ? (
         <>
           {/* VKS Chart Section */}
-          <div className="flex-1 min-h-[300px] bg-card/30 backdrop-blur border border-white/5 rounded p-1 relative flex flex-col z-10">
+          <div className="h-[280px] bg-card/30 backdrop-blur border border-white/5 rounded p-1 relative flex flex-col z-10">
             <div className="absolute top-4 left-4 z-10 flex flex-col">
                 <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
                     <Activity size={14} className="text-pulse" />
@@ -207,15 +195,8 @@ export function Dashboard() {
             <VKSChart data={data} />
           </div>
 
-          {/* Active Ops Dashboard Table */}
-          <div className="h-[500px] relative z-10">
-             <ActiveOps />
-          </div>
-        </>
-      ) : activeTab === 'rankings' ? (
-        <>
-          {/* 历史排名 */}
-          <div className="flex-1 relative z-10">
+          {/* 历史排名 - 合并到 VKS 下方 */}
+          <div className="flex-1 min-h-[400px] relative z-10">
             <HistoryRankings />
           </div>
         </>
