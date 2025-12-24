@@ -58,9 +58,9 @@ export function Dashboard() {
             <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${
               dataSource === 'backend'
                 ? 'bg-green-900/30 text-green-400 border border-green-500/30'
-                : 'bg-yellow-900/30 text-yellow-400 border border-yellow-500/30'
+                : 'bg-blue-900/30 text-blue-400 border border-blue-500/30'
             }`}>
-              {dataSource === 'backend' ? '🔴 LIVE DATA' : '⚡ SIMULATION'}
+              {dataSource === 'backend' ? '🔴 LIVE DATA' : '🔄 REPLAY'}
             </span>
             {/* 当前监控的 hashtag 和平台 */}
             {currentHashtag && (
@@ -189,7 +189,7 @@ export function Dashboard() {
                 </h3>
                 <span className="text-[10px] text-slate-500 font-mono">
                   Metric: VKS (Viral Kinetic Score) |
-                  数据源: {dataSource === 'backend' ? 'Confluent Kafka + Flink SQL' : '本地模拟'}
+                  数据源: {dataSource === 'backend' ? 'Confluent Kafka + Flink SQL' : '回放缓存数据'}
                 </span>
             </div>
             <VKSChart data={data} />
