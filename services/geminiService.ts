@@ -1,12 +1,3 @@
-/**
- * Gemini AI 服务
- *
- * API 配额优化策略（基于 2024-12 配额）：
- * - gemini-2.5-flash: 10/1K RPM, 64/10K RPD - 主力模型
- * - gemini-2.5-flash-lite: 9/4K RPM, Unlimited RPD - 轻量任务
- * - gemini-3-pro: 2/25 RPM - 复杂推理（谨慎使用）
- * - gemini-3-pro-image (即 Banana Pro): 2/20 RPM - 图片生成
- */
 
 import { GoogleGenAI } from "@google/genai";
 import { TrendItem, AnalysisResult, TrendReportItem } from "../types";
@@ -17,84 +8,6 @@ const apiKey = (process.env.API_KEY || process.env.VITE_API_KEY || '');
 const ai = new GoogleGenAI({ apiKey });
 
 export const checkApiKey = () => !!apiKey;
-
-/**
- * 并发控制器 - 用于管理 API 调用并发
- * 避免超出 RPM 限制
- */
-class ConcurrencyController {
-    private queue: (() => Promise<any>)[] = [];
-    private running = 0;
-    private maxConcurrent: number;
-    private delayBetweenCalls: number;
-
-    constructor(maxConcurrent = 5, delayMs = 200) {
-        this.maxConcurrent = maxConcurrent;
-        this.delayBetweenCalls = delayMs;
-    }
-
-    async add<T>(task: () => Promise<T>): Promise<T> {
-        return new Promise((resolve, reject) => {
-            this.queue.push(async () => {
-                try {
-                    const result = await task();
-                    resolve(result);
-                } catch (error) {
-                    reject(error);
-                }
-            });
-            this.processQueue();
-        });
-    }
-
-    private async processQueue() {
-        if (this.running >= this.maxConcurrent || this.queue.length === 0) {
-            return;
-        }
-
-        const task = this.queue.shift();
-        if (!task) return;
-
-        this.running++;
-        try {
-            await task();
-        } finally {
-            this.running--;
-            // 延迟一下再处理下一个，避免短时间内请求过多
-            await new Promise(r => setTimeout(r, this.delayBetweenCalls));
-            this.processQueue();
-        }
-    }
-}
-
-// 全局并发控制器实例
-// Flash 模型: 10 RPM = 每6秒1个请求，设置 5 并发 + 200ms 延迟
-const flashController = new ConcurrencyController(5, 200);
-// Flash-Lite 模型: 4K RPM = 更高并发
-const flashLiteController = new ConcurrencyController(10, 50);
-// Pro 模型: 2 RPM = 严格限制
-const proController = new ConcurrencyController(1, 3000);
-
-/**
- * 批量处理任务的工具函数
- * 使用适当的并发控制
- */
-export const batchProcess = async <T, R>(
-    items: T[],
-    processor: (item: T) => Promise<R>,
-    modelType: 'flash' | 'flash-lite' | 'pro' = 'flash'
-): Promise<R[]> => {
-    const controller = modelType === 'flash-lite'
-        ? flashLiteController
-        : modelType === 'pro'
-            ? proController
-            : flashController;
-
-    const results = await Promise.all(
-        items.map(item => controller.add(() => processor(item)))
-    );
-    return results;
-};
 
 /**
  * ROBUST JSON PARSER
@@ -410,22 +323,20 @@ export const analyzeDeepDive = async (trend: TrendItem): Promise<AnalysisResult>
   };
 
 /**
- * GENERATE IMAGE: 使用 gemini-3-pro-image (Banana Pro) 生成图片
- *
- * 说明：gemini-3-pro-image 就是 Banana Pro，直接使用即可
- * 统一使用 1K 分辨率，避免消耗过多配额
+ * GENERATE IMAGE: Using gemini-3-pro-image-preview
  */
-export const generateTrendImage = async (prompt: string) => {
+export const generateTrendImage = async (prompt: string, size: '1K' | '2K' | '4K' = '1K') => {
     if (!apiKey) throw new Error("API Key not found");
-    const primaryModel = "gemini-3-pro-image";
-
+    const primaryModel = "gemini-3-pro-image-preview";
+    
     try {
         const response = await ai.models.generateContent({
             model: primaryModel,
             contents: { parts: [{ text: prompt }] },
             config: {
                 imageConfig: {
-                    aspectRatio: "1:1"
+                    aspectRatio: "1:1", 
+                    imageSize: size
                 }
             }
         });
@@ -441,7 +352,6 @@ export const generateTrendImage = async (prompt: string) => {
         console.warn("[ImageGen] Primary model failed, attempting fallback...", error);
     }
 
-    // 回退到 gemini-2.5-flash-image
     try {
         const fallbackModel = "gemini-2.5-flash-image";
         const response = await ai.models.generateContent({
