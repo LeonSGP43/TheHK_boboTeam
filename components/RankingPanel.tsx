@@ -6,11 +6,12 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
+import {
     Trophy, TrendingUp, Crown, Medal, Award,
-    Twitter, Video, MessageCircle, Linkedin, Youtube, Instagram, Facebook,
+    Twitter, Video, Youtube, Instagram,
     ChevronDown, ChevronUp, Zap, Activity
 } from 'lucide-react';
+// 注意：移除了 MessageCircle, Linkedin, Facebook，因为这些平台没有数据
 import { RankedItem } from '../hooks/useRankings';
 
 interface PlatformRankingData {
@@ -24,28 +25,22 @@ interface RankingPanelProps {
     onSelectItem?: (item: RankedItem) => void;
 }
 
-// 平台图标映射
+// 平台图标映射（只保留有数据的平台）
 const PLATFORM_ICONS: { [key: string]: React.ElementType } = {
     'X': Twitter,
     'TWITTER': Twitter,
     'TIKTOK': Video,
-    'REDDIT': MessageCircle,
-    'LINKEDIN': Linkedin,
     'YOUTUBE': Youtube,
     'INSTAGRAM': Instagram,
-    'FACEBOOK': Facebook,
 };
 
-// 平台颜色映射
+// 平台颜色映射（只保留有数据的平台）
 const PLATFORM_COLORS: { [key: string]: string } = {
     'X': 'text-white',
     'TWITTER': 'text-white',
     'TIKTOK': 'text-[#ff0050]',
-    'REDDIT': 'text-[#ff4500]',
-    'LINKEDIN': 'text-[#0077b5]',
     'YOUTUBE': 'text-[#ff0000]',
     'INSTAGRAM': 'text-[#e1306c]',
-    'FACEBOOK': 'text-[#1877f2]',
 };
 
 // 排名徽章组件

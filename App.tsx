@@ -14,10 +14,11 @@ import { SpiderServerDoc } from './components/SpiderServerDoc';
 import { TRANSLATIONS } from './i18n';
 import {
     Flame, BrainCircuit, AlertTriangle, Search, Zap,
-    Twitter, Linkedin, Video, MessageCircle, Youtube, Globe, LayoutGrid,
-    Instagram, Facebook, ArrowUpLeft, RefreshCw,
+    Twitter, Video, Youtube, Globe, LayoutGrid,
+    Instagram, ArrowUpLeft, RefreshCw,
     List, Grid, Box, CornerDownLeft, Settings
 } from 'lucide-react';
+// 注意：移除了 Linkedin, MessageCircle, Facebook，因为这些平台没有数据
 import { motion, AnimatePresence } from 'framer-motion';
 
 // --- CONFIG ---
@@ -32,15 +33,13 @@ const DISCOVERY_QUERIES = [
     "Cyberpunk Art Styles", "Retro Anime Aesthetics", "Surrealist AI Art", "Fantasy Character Design"
 ];
 
+// 平台配置：只保留有数据的平台（移除了 Reddit, LinkedIn, Facebook）
 const getPlatforms = (t: any) => [
     { id: 'ALL', label: t.tabAll, icon: LayoutGrid, color: 'text-text' },
-    { id: 'X', label: t.twitter, icon: Twitter, color: 'text-text' }, 
+    { id: 'X', label: t.twitter, icon: Twitter, color: 'text-text' },
     { id: 'TIKTOK', label: t.tiktok, icon: Video, color: 'text-[#ff0050]' },
-    { id: 'REDDIT', label: t.reddit, icon: MessageCircle, color: 'text-[#ff4500]' },
-    { id: 'LINKEDIN', label: t.linkedin, icon: Linkedin, color: 'text-[#0077b5]' },
     { id: 'YOUTUBE', label: t.youtube, icon: Youtube, color: 'text-[#ff0000]' },
     { id: 'INSTAGRAM', label: t.instagram, icon: Instagram, color: 'text-[#e1306c]' },
-    { id: 'FACEBOOK', label: t.facebook, icon: Facebook, color: 'text-[#1877f2]' },
 ];
 
 const SkeletonItem: React.FC<{ mode: ViewMode }> = ({ mode }) => {
@@ -68,7 +67,8 @@ const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<PageView>('dashboard');
   
   // 排名数据
-  const { rankings, getPlatformRanking, getGlobalRanking, refresh: refreshRankings } = useRankings(true, 30000);
+  // 排名数据刷新间隔从 30 秒改为 60 秒，减少服务器压力
+  const { rankings, getPlatformRanking, getGlobalRanking, refresh: refreshRankings } = useRankings(true, 60000);
 
   const [trends, setTrends] = useState<TrendItem[]>([]);
   const [selectedTrend, setSelectedTrend] = useState<TrendItem | null>(null);
