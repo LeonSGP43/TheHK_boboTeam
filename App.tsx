@@ -248,17 +248,23 @@ const App: React.FC = () => {
                  {PLATFORMS.map((p) => (
                    <button
                        key={p.id}
-                       onClick={() => setActivePlatform(p.id)}
+                       onClick={() => {
+                           setActivePlatform(p.id);
+                           // If on dashboard/admin page, switch to search page
+                           if (currentPage !== 'search') {
+                               setCurrentPage('search');
+                           }
+                       }}
                        className={`
                            flex items-center gap-2 px-5 py-2.5 rounded-full border transition-all duration-300 shrink-0
-                           ${activePlatform === p.id 
+                           ${activePlatform === p.id && currentPage === 'search'
                                 ? 'bg-zinc-900 dark:bg-white text-white dark:text-black shadow-[0_0_20px_rgba(0,0,0,0.2)] dark:shadow-[0_0_20px_rgba(255,255,255,0.4)] border-transparent scale-105 font-bold' 
                                 : 'bg-transparent border-transparent text-slate-500 hover:text-zinc-900 dark:hover:text-text hover:bg-black/5 dark:hover:bg-white/5'
                            }
                        `}
                    >
-                       <p.icon size={16} className={activePlatform === p.id ? 'text-white dark:text-black' : 'currentColor'} />
-                       <span className={`text-[10px] font-bold uppercase tracking-wide ${activePlatform === p.id ? 'block' : 'hidden xl:block'}`}>
+                       <p.icon size={16} className={activePlatform === p.id && currentPage === 'search' ? 'text-white dark:text-black' : 'currentColor'} />
+                       <span className={`text-[10px] font-bold uppercase tracking-wide ${activePlatform === p.id && currentPage === 'search' ? 'block' : 'hidden xl:block'}`}>
                            {p.label}
                        </span>
                    </button>
