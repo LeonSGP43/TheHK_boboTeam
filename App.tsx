@@ -16,7 +16,7 @@ import { TRANSLATIONS } from './i18n';
 import {
     Flame, BrainCircuit, AlertTriangle, Search, Zap,
     Twitter, Linkedin, Video, MessageCircle, Youtube, Globe, LayoutGrid,
-    Instagram, Facebook, Moon, Sun, Languages, ArrowUpLeft, RefreshCw, Loader2,
+    Instagram, Facebook, ArrowUpLeft, RefreshCw,
     List, Grid, Box, CornerDownLeft, BookOpen, Trophy, Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -268,10 +268,6 @@ const App: React.FC = () => {
               {/* Tools */}
               <div className="flex items-center gap-4 shrink-0">
                   <div className="flex items-center gap-2 px-4 py-2 bg-black/5 dark:bg-black/20 rounded-full border border-black/5 dark:border-white/5 transition-colors">
-                      <button onClick={toggleLang} className="text-slate-500 hover:text-zinc-900 dark:hover:text-white transition-colors"><Languages size={18}/></button>
-                      <div className="w-px h-4 bg-black/10 dark:bg-white/10 transition-colors"/>
-                      <button onClick={toggleTheme} className="text-slate-500 hover:text-zinc-900 dark:hover:text-white transition-colors">{theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}</button>
-                      <div className="w-px h-4 bg-black/10 dark:bg-white/10 transition-colors"/>
                       {/* 系统管理按钮 */}
                       <button
                           onClick={() => setCurrentPage('admin')}
