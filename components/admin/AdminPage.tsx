@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BACKEND_URL, SPIDER_URL } from '../../config/env';
+import { LogsViewer } from './LogsViewer';
 
 interface ConfigItem {
   value: any;
@@ -493,6 +494,20 @@ export function AdminPage({ onBack }: Props) {
               )}
             </div>
           )}
+        </section>
+
+        {/* System Logs */}
+        <section className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+          <div className="p-4 border-b border-white/10">
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <Terminal className="text-green-400" size={20} />
+              System Logs
+            </h2>
+            <p className="text-xs text-slate-500">实时系统日志监控</p>
+          </div>
+          <div className="h-[400px]">
+            <LogsViewer />
+          </div>
         </section>
 
         </div>

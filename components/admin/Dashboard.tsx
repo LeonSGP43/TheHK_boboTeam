@@ -2,12 +2,10 @@
 import React, { useState } from 'react';
 import { useTrendData, ConnectionStatus } from '../../hooks/useTrendData';
 import { VKSChart } from './VKSChart';
-import { LogsViewer } from './LogsViewer';
 import { TrendIgnitionWidget } from './TrendIgnitionWidget';
 import { VKSSpark } from '../../components/effects/VKSSpark';
 import { HistoryRankings } from './HistoryRankings';
-import { ConfigManager } from './ConfigManager';
-import { Activity, Radio, AlertTriangle, Power, Network, Wifi, WifiOff, RefreshCw, Terminal, Settings } from 'lucide-react';
+import { Activity, Radio, AlertTriangle, Power, Network, Wifi, WifiOff, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Connection status display config
@@ -22,7 +20,6 @@ export function Dashboard() {
   // Get full state data from hook
   const { data, currentVKS, currentHashtag, currentPlatform, currentAuthor, connectionStatus, dataSource, reconnect } = useTrendData();
   const [showKillModal, setShowKillModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'vks' | 'logs' | 'config'>('vks');
 
   // Get connection status config
   const statusConfig = CONNECTION_STATUS_CONFIG[connectionStatus];
@@ -134,80 +131,24 @@ export function Dashboard() {
         })}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 relative z-10">
-        <button
-          onClick={() => setActiveTab('vks')}
-          className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-            activeTab === 'vks'
-              ? 'bg-pulse text-white shadow-lg'
-              : 'bg-card/50 text-slate-400 hover:text-slate-200 border border-white/5'
-          }`}
-        >
-          <Activity size={16} />
-          VKS Monitor & Rankings
-        </button>
-        <button
-          onClick={() => setActiveTab('logs')}
-          className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-            activeTab === 'logs'
-              ? 'bg-pulse text-white shadow-lg'
-              : 'bg-card/50 text-slate-400 hover:text-slate-200 border border-white/5'
-          }`}
-        >
-          <Terminal size={16} />
-          System Logs
-        </button>
-        <button
-          onClick={() => setActiveTab('config')}
-          className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-            activeTab === 'config'
-              ? 'bg-purple-500 text-white shadow-lg'
-              : 'bg-card/50 text-slate-400 hover:text-slate-200 border border-white/5'
-          }`}
-        >
-          <Settings size={16} />
-          System Config
-        </button>
+      {/* VKS Chart Section */}
+      <div className="h-[280px] bg-card/30 backdrop-blur border border-white/5 rounded p-1 relative flex flex-col z-10">
+        <div className="absolute top-4 left-4 z-10 flex flex-col">
+            <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                <Activity size={14} className="text-pulse" />
+                Real-time Kinetic Monitor
+            </h3>
+            <span className="text-[10px] text-slate-500 font-mono">
+              Metric: VKS (Viral Kinetic Score)
+            </span>
+        </div>
+        <VKSChart data={data} />
       </div>
 
-      {/* Main Content Section */}
-      {activeTab === 'vks' ? (
-        <>
-          {/* VKS Chart Section */}
-          <div className="h-[280px] bg-card/30 backdrop-blur border border-white/5 rounded p-1 relative flex flex-col z-10">
-            <div className="absolute top-4 left-4 z-10 flex flex-col">
-                <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-                    <Activity size={14} className="text-pulse" />
-                    Real-time Kinetic Monitor
-                </h3>
-                <span className="text-[10px] text-slate-500 font-mono">
-                  Metric: VKS (Viral Kinetic Score)
-                </span>
-            </div>
-            <VKSChart data={data} />
-          </div>
-
-          {/* History Rankings - merged below VKS, no height limit */}
-          <div className="relative z-10">
-            <HistoryRankings />
-          </div>
-        </>
-      ) : activeTab === 'logs' ? (
-        <>
-          {/* Logs Viewer */}
-          <div className="flex-1 bg-card/30 backdrop-blur border border-white/5 rounded overflow-hidden relative z-10">
-            <LogsViewer />
-          </div>
-        </>
-      ) : (
-        <>
-          {/* System Config */}
-          <div className="flex-1 bg-card/30 backdrop-blur border border-white/5 rounded overflow-hidden relative z-10">
-            <ConfigManager />
-          </div>
-        </>
-      )}
+      {/* History Rankings */}
+      <div className="relative z-10">
+        <HistoryRankings />
+      </div>
 
       {/* Kill Switch Modal */}
       <AnimatePresence>

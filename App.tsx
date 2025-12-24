@@ -17,7 +17,7 @@ import {
     Flame, BrainCircuit, AlertTriangle, Search, Zap,
     Twitter, Linkedin, Video, MessageCircle, Youtube, Globe, LayoutGrid,
     Instagram, Facebook, ArrowUpLeft, RefreshCw,
-    List, Grid, Box, CornerDownLeft, BookOpen, Trophy, Settings
+    List, Grid, Box, CornerDownLeft, Trophy, Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -281,15 +281,6 @@ const App: React.FC = () => {
                           title="System Admin"
                       >
                           <Settings size={18} />
-                      </button>
-                      <div className="w-px h-4 bg-black/10 dark:bg-white/10 transition-colors"/>
-                      {/* 爬虫服务文档按钮 */}
-                      <button
-                          onClick={() => setShowSpiderDoc(true)}
-                          className="text-slate-500 hover:text-zinc-900 dark:hover:text-white transition-colors"
-                          title="Spider Docs"
-                      >
-                          <BookOpen size={18} />
                       </button>
                   </div>
                   <button 
