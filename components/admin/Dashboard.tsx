@@ -180,12 +180,6 @@ export function Dashboard() {
                 <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
                     <Activity size={14} className="text-pulse" />
                     Real-time Kinetic Monitor
-                    {currentHashtag && (
-                      <span className="text-spark font-mono">{currentHashtag}</span>
-                    )}
-                    {currentPlatform && (
-                      <span className="text-blue-400 font-mono ml-2">| {currentPlatform}</span>
-                    )}
                 </h3>
                 <span className="text-[10px] text-slate-500 font-mono">
                   Metric: VKS (Viral Kinetic Score) |
