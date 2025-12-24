@@ -12,6 +12,7 @@ import {
     TrendingUp, Zap, Activity, BarChart3
 } from 'lucide-react';
 import { BACKEND_URL } from '../../config/env';
+import { getCachedHistoryData, preloadHistoryData } from '../../services/historyCache';
 
 interface RankedItem {
     id: string;
@@ -72,11 +73,24 @@ export function HistoryRankings() {
     const [selectedPlatform, setSelectedPlatform] = useState<string>('ALL');
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-    const fetchData = async () => {
+    const fetchData = async (useCache = false) => {
+        // 优先使用缓存数据
+        if (useCache) {
+            const cached = getCachedHistoryData();
+            if (cached) {
+                console.log('[HistoryRankings] Using cached data');
+                setRankings(cached.rankings);
+                setStats(cached.stats);
+                setLastUpdated(new Date(cached.timestamp));
+                setLoading(false);
+                return;
+            }
+        }
+
         setLoading(true);
         try {
             const [rankingsRes, statsRes] = await Promise.all([
-                fetch(`${BACKEND_URL}/api/history/rankings?top_n=20`),
+                fetch(`${BACKEND_URL}/api/history/rankings?top_n=100`),
                 fetch(`${BACKEND_URL}/api/history/stats`)
             ]);
 
@@ -99,8 +113,9 @@ export function HistoryRankings() {
     };
 
     useEffect(() => {
-        fetchData();
-        const interval = setInterval(fetchData, 30000);
+        // 首次加载优先使用缓存
+        fetchData(true);
+        const interval = setInterval(() => fetchData(false), 30000);
         return () => clearInterval(interval);
     }, []);
 

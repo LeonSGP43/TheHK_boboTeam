@@ -11,6 +11,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Loader2, CheckCircle2, Wifi, Radio, AlertCircle } from "lucide-react";
 import { BACKEND_URL } from "../../config/env";
+import { preloadHistoryData } from "../../services/historyCache";
 
 interface CrawlLoaderProps {
   onComplete: () => void;
@@ -179,6 +180,9 @@ export function CrawlLoader({ onComplete }: CrawlLoaderProps) {
           setErrorMessage("爬虫服务器未启动！请运行: cd spider6p && npm run server");
           return;
         }
+
+        // 预加载历史数据（不阻塞主流程）
+        preloadHistoryData().catch(console.error);
 
         // Step 2: 先连接 SSE（在触发爬虫之前！）
         console.log("[CrawlLoader] 🔌 Step 2: Connecting SSE...");
