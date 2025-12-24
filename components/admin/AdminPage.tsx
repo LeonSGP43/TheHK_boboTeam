@@ -11,16 +11,7 @@ import {
   Plus, AlertTriangle, FlaskConical
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-// 生产环境默认 URL
-const PROD_BACKEND_URL = "http://47.101.161.15:8000";
-const PROD_SPIDER_URL = "http://47.101.161.15:8001";
-
-const isLocalDev = typeof window !== 'undefined' && 
-  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-const BACKEND_URL = isLocalDev ? "" : (import.meta.env?.VITE_BACKEND_URL || PROD_BACKEND_URL);
-const SPIDER_URL = isLocalDev ? "http://localhost:8001" : (import.meta.env?.VITE_SPIDER_URL || PROD_SPIDER_URL);
+import { BACKEND_URL, SPIDER_URL } from '../../config/env';
 
 interface ConfigItem {
   value: any;

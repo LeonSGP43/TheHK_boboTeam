@@ -10,17 +10,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Loader2, CheckCircle2, Wifi, Radio, AlertCircle } from "lucide-react";
-
-// 检测是否在本地开发环境
-const isLocalDev = typeof window !== 'undefined' && 
-  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-// 生产环境默认 URL
-const PROD_BACKEND_URL = "http://47.101.161.15:8000";
-
-const BACKEND_URL = isLocalDev 
-  ? "http://localhost:8000"
-  : (import.meta.env?.VITE_BACKEND_URL || PROD_BACKEND_URL);
+import { BACKEND_URL } from "../../config/env";
 
 interface CrawlLoaderProps {
   onComplete: () => void;
