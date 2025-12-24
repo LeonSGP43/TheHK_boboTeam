@@ -33,7 +33,8 @@ const LogLevelBgColors: Record<string, string> = {
 export const LogsViewer: React.FC = () => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(false);
-  const [autoRefresh, setAutoRefresh] = useState(true);
+  // 默认关闭自动刷新，避免每次都滚动到底部干扰用户
+  const [autoRefresh, setAutoRefresh] = useState(false);
   const [filterLevel, setFilterLevel] = useState<string>('');
   const [filterLogger, setFilterLogger] = useState<string>('');
   const [stats, setStats] = useState<any>(null);
