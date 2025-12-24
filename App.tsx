@@ -17,7 +17,7 @@ import {
     Flame, BrainCircuit, AlertTriangle, Search, Zap,
     Twitter, Linkedin, Video, MessageCircle, Youtube, Globe, LayoutGrid,
     Instagram, Facebook, Moon, Sun, Languages, ArrowUpLeft, RefreshCw, Loader2,
-    List, Grid, Box, CornerDownLeft, Activity, BookOpen, Trophy, Settings
+    List, Grid, Box, CornerDownLeft, BookOpen, Trophy, Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -219,8 +219,11 @@ const App: React.FC = () => {
           {/* HEADER ISLAND */}
           <header className="h-20 shrink-0 glass-high rounded-[2rem] px-8 flex items-center justify-between z-30 gap-6">
               
-              {/* LOGO BRANDING (Updated to Butterfly) */}
-              <div className="flex items-center gap-3 shrink-0">
+              {/* LOGO BRANDING (Updated to Butterfly) - Click to go to COMMAND_CENTER */}
+              <button 
+                onClick={() => setCurrentPage('dashboard')}
+                className="flex items-center gap-3 shrink-0 hover:opacity-80 transition-opacity cursor-pointer"
+              >
                 <div className="p-2 bg-gradient-to-br from-[#BD00FF]/20 to-[#00F0FF]/10 rounded-xl border border-white/10 shadow-[0_5px_15px_rgba(189,0,255,0.2)] backdrop-blur-md">
                     <ButterflyIcon className="text-white w-5 h-5 drop-shadow-[0_0_8px_rgba(0,240,255,0.8)]" />
                 </div>
@@ -235,7 +238,7 @@ const App: React.FC = () => {
                         PULSE
                     </span>
                 </div>
-              </div>
+              </button>
 
               {/* Separator */}
               <div className="h-8 w-px bg-black/10 dark:bg-white/10 hidden md:block shrink-0 transition-colors" />
@@ -269,20 +272,11 @@ const App: React.FC = () => {
                       <div className="w-px h-4 bg-black/10 dark:bg-white/10 transition-colors"/>
                       <button onClick={toggleTheme} className="text-slate-500 hover:text-zinc-900 dark:hover:text-white transition-colors">{theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}</button>
                       <div className="w-px h-4 bg-black/10 dark:bg-white/10 transition-colors"/>
-                      {/* VKS Dashboard 切换按钮 */}
-                      <button
-                          onClick={() => setCurrentPage(currentPage === 'search' ? 'dashboard' : 'search')}
-                          className={`transition-colors ${currentPage === 'dashboard' ? 'text-spark' : 'text-slate-500 hover:text-zinc-900 dark:hover:text-white'}`}
-                          title={currentPage === 'dashboard' ? '返回搜索' : 'VKS 控制台'}
-                      >
-                          <Activity size={18} />
-                      </button>
-                      <div className="w-px h-4 bg-black/10 dark:bg-white/10 transition-colors"/>
                       {/* 系统管理按钮 */}
                       <button
                           onClick={() => setCurrentPage('admin')}
                           className={`transition-colors ${currentPage === 'admin' ? 'text-purple-500' : 'text-slate-500 hover:text-zinc-900 dark:hover:text-white'}`}
-                          title="系统管理"
+                          title="System Admin"
                       >
                           <Settings size={18} />
                       </button>
@@ -291,7 +285,7 @@ const App: React.FC = () => {
                       <button
                           onClick={() => setShowSpiderDoc(true)}
                           className="text-slate-500 hover:text-zinc-900 dark:hover:text-white transition-colors"
-                          title="爬虫服务文档"
+                          title="Spider Docs"
                       >
                           <BookOpen size={18} />
                       </button>
