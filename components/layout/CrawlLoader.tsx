@@ -221,6 +221,11 @@ export function CrawlLoader({ onComplete }: CrawlLoaderProps) {
             
             platform = payload.platform || "UNKNOWN";
 
+            // 过滤无效数据：UNKNOWN 平台或 score 为 0
+            if (platform === "UNKNOWN" || score === 0) {
+              return;
+            }
+
             console.log(`[CrawlLoader] 📊 SSE ${eventType}:`, { 
               platform, 
               score: score.toFixed(2), 
