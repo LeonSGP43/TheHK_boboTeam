@@ -66,7 +66,7 @@ const ButterflyIcon = ({ className }: { className?: string }) => (
 
 const App: React.FC = () => {
   const [loadingApp, setLoadingApp] = useState(true);
-  const [currentPage, setCurrentPage] = useState<PageView>('search');
+  const [currentPage, setCurrentPage] = useState<PageView>('dashboard');
   
   // 排名数据
   const { rankings, getPlatformRanking, getGlobalRanking, refresh: refreshRankings } = useRankings(true, 30000);
