@@ -90,7 +90,7 @@ export function HistoryRankings() {
         setLoading(true);
         try {
             const [rankingsRes, statsRes] = await Promise.all([
-                fetch(`${BACKEND_URL}/api/history/rankings?top_n=100`),
+                fetch(`${BACKEND_URL}/api/history/rankings`),
                 fetch(`${BACKEND_URL}/api/history/stats`)
             ]);
 
