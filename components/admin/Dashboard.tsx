@@ -10,21 +10,21 @@ import { ConfigManager } from './ConfigManager';
 import { Activity, Radio, AlertTriangle, Power, Network, Wifi, WifiOff, RefreshCw, Terminal, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// 连接状态显示配置
+// Connection status display config
 const CONNECTION_STATUS_CONFIG: Record<ConnectionStatus, { color: string; text: string; icon: typeof Wifi }> = {
-  disconnected: { color: 'text-slate-500', text: '未连接', icon: WifiOff },
-  connecting: { color: 'text-yellow-500 animate-pulse', text: '连接中...', icon: Wifi },
-  connected: { color: 'text-green-500', text: '已连接', icon: Wifi },
-  error: { color: 'text-red-500', text: '连接错误', icon: WifiOff },
+  disconnected: { color: 'text-slate-500', text: 'Disconnected', icon: WifiOff },
+  connecting: { color: 'text-yellow-500 animate-pulse', text: 'Connecting...', icon: Wifi },
+  connected: { color: 'text-green-500', text: 'Connected', icon: Wifi },
+  error: { color: 'text-red-500', text: 'Error', icon: WifiOff },
 };
 
 export function Dashboard() {
-  // 从 hook 获取完整的状态数据
+  // Get full state data from hook
   const { data, currentVKS, currentHashtag, currentPlatform, currentAuthor, connectionStatus, dataSource, reconnect } = useTrendData();
   const [showKillModal, setShowKillModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'vks' | 'logs' | 'config'>('vks');
 
-  // 获取连接状态配置
+  // Get connection status config
   const statusConfig = CONNECTION_STATUS_CONFIG[connectionStatus];
 
   // Metric Cards Data - Updated to be more Data-Centric
@@ -49,12 +49,12 @@ export function Dashboard() {
             COMMAND_CENTER <span className="text-xs bg-slate-800 text-slate-400 px-2 py-0.5 rounded">V3.0 CONFLUENT + FLINK</span>
           </h1>
           <div className="flex items-center gap-4 mt-1">
-            {/* 连接状态指示器 */}
+            {/* Connection status indicator */}
             <div className="flex items-center gap-1.5">
               <statusConfig.icon size={12} className={statusConfig.color} />
               <span className={`text-[10px] font-mono ${statusConfig.color}`}>{statusConfig.text}</span>
             </div>
-            {/* 数据源指示器 */}
+            {/* Data source indicator */}
             <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${
               dataSource === 'backend'
                 ? 'bg-green-900/30 text-green-400 border border-green-500/30'
@@ -62,10 +62,10 @@ export function Dashboard() {
             }`}>
               {dataSource === 'backend' ? '🔴 LIVE DATA' : '🔄 REPLAY'}
             </span>
-            {/* 当前监控的 hashtag 和平台 */}
+            {/* Current tracking hashtag and platform */}
             {currentHashtag && (
               <span className="text-[10px] font-mono text-pulse">
-                监控: {currentHashtag}
+                Tracking: {currentHashtag}
               </span>
             )}
             {currentPlatform && (
@@ -78,14 +78,14 @@ export function Dashboard() {
                 @{currentAuthor}
               </span>
             )}
-            {/* 重连按钮（仅在错误状态显示） */}
+            {/* Reconnect button (only shown on error) */}
             {connectionStatus === 'error' && (
               <button
                 onClick={reconnect}
                 className="flex items-center gap-1 text-[10px] font-mono text-yellow-400 hover:text-yellow-300 transition-colors"
               >
                 <RefreshCw size={10} />
-                重连
+                Reconnect
               </button>
             )}
           </div>
@@ -134,7 +134,7 @@ export function Dashboard() {
         })}
       </div>
 
-      {/* 标签页 */}
+      {/* Tabs */}
       <div className="flex gap-2 relative z-10">
         <button
           onClick={() => setActiveTab('vks')}
@@ -145,7 +145,7 @@ export function Dashboard() {
           }`}
         >
           <Activity size={16} />
-          VKS 监控 & 排名
+          VKS Monitor & Rankings
         </button>
         <button
           onClick={() => setActiveTab('logs')}
@@ -156,7 +156,7 @@ export function Dashboard() {
           }`}
         >
           <Terminal size={16} />
-          系统日志
+          System Logs
         </button>
         <button
           onClick={() => setActiveTab('config')}
@@ -167,7 +167,7 @@ export function Dashboard() {
           }`}
         >
           <Settings size={16} />
-          系统配置
+          System Config
         </button>
       </div>
 
@@ -182,28 +182,27 @@ export function Dashboard() {
                     Real-time Kinetic Monitor
                 </h3>
                 <span className="text-[10px] text-slate-500 font-mono">
-                  Metric: VKS (Viral Kinetic Score) |
-                  数据源: {dataSource === 'backend' ? 'Confluent Kafka + Flink SQL' : '回放缓存数据'}
+                  Metric: VKS (Viral Kinetic Score)
                 </span>
             </div>
             <VKSChart data={data} />
           </div>
 
-          {/* 历史排名 - 合并到 VKS 下方，不限制高度 */}
+          {/* History Rankings - merged below VKS, no height limit */}
           <div className="relative z-10">
             <HistoryRankings />
           </div>
         </>
       ) : activeTab === 'logs' ? (
         <>
-          {/* 日志查看器 */}
+          {/* Logs Viewer */}
           <div className="flex-1 bg-card/30 backdrop-blur border border-white/5 rounded overflow-hidden relative z-10">
             <LogsViewer />
           </div>
         </>
       ) : (
         <>
-          {/* 系统配置 */}
+          {/* System Config */}
           <div className="flex-1 bg-card/30 backdrop-blur border border-white/5 rounded overflow-hidden relative z-10">
             <ConfigManager />
           </div>
