@@ -125,7 +125,6 @@ export function HistoryRankings() {
             return (Object.values(rankings) as Array<{ records: RankedItem[]; total: number }>)
                 .flatMap(p => p.records || [])
                 .sort((a, b) => b.trend_score - a.trend_score)
-                .slice(0, 30)
                 .map((item, index) => ({ ...item, rank: index + 1 }));
         }
         return rankings[selectedPlatform]?.records || [];
