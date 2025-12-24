@@ -195,8 +195,8 @@ export function Dashboard() {
             <VKSChart data={data} />
           </div>
 
-          {/* 历史排名 - 合并到 VKS 下方 */}
-          <div className="flex-1 min-h-[400px] relative z-10">
+          {/* 历史排名 - 合并到 VKS 下方，不限制高度 */}
+          <div className="relative z-10">
             <HistoryRankings />
           </div>
         </>

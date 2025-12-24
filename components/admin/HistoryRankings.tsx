@@ -214,7 +214,7 @@ export function HistoryRankings() {
     };
 
     return (
-        <div className="h-full flex flex-col bg-card/30 backdrop-blur border border-white/5 rounded overflow-hidden">
+        <div className="flex flex-col bg-card/30 backdrop-blur border border-white/5 rounded overflow-hidden">
             {/* Header */}
             <div className="p-4 border-b border-white/5 flex justify-between items-center bg-white/5">
                 <div className="flex items-center gap-3">
@@ -304,7 +304,7 @@ export function HistoryRankings() {
             )}
 
             {/* Rankings Table */}
-            <div className="flex-1 overflow-auto">
+            <div className="overflow-x-auto">
                 {loading && currentRankings.length === 0 ? (
                     <div className="flex items-center justify-center h-full">
                         <div className="text-center">
