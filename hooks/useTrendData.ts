@@ -172,15 +172,22 @@ export const useTrendData = () => {
     const tickInterval = setInterval(() => {
       const timeSinceLastData = Date.now() - lastRealDataTimeRef.current;
       
-      // 如果超过 3 秒没有新数据，且有缓存数据，则回放
-      if (timeSinceLastData > 3000 && cachedRealData.length > 0) {
+      // 如果超过 2 秒没有新数据，且有缓存数据，则快速回放
+      if (timeSinceLastData > 2000 && cachedRealData.length > 0) {
         // 获取回放数据
         const replayPoint = cachedRealData[replayIndexRef.current % cachedRealData.length];
         replayIndexRef.current++;
 
+        // 添加随机波动让图表更生动
+        const variation = (Math.random() - 0.5) * 20;
+        const vksWithVariation = Math.max(0, Math.min(100, replayPoint.vks + variation));
+
         // 更新时间戳为当前时间
         const newPoint: VKSDataPoint = {
           ...replayPoint,
+          vks: Math.round(vksWithVariation),
+          velocity: Math.round((Math.random() - 0.5) * 20),
+          acceleration: Math.round((Math.random() - 0.5) * 10),
           time: new Date().toLocaleTimeString([], { hour12: false, minute: '2-digit', second: '2-digit' })
         };
 
@@ -196,7 +203,7 @@ export const useTrendData = () => {
           return newData;
         });
       }
-    }, 1000);
+    }, 500); // 每 500ms 更新一次，更快的回放速度
 
     return () => {
       clearInterval(tickInterval);
