@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 import { Loader2, CheckCircle2, Wifi, Radio, AlertCircle } from "lucide-react";
 import { BACKEND_URL } from "../../config/env";
 import { preloadHistoryData } from "../../services/historyCache";
+import { preloadPlatformNews } from "../../services/platformNewsCache";
 
 interface CrawlLoaderProps {
   onComplete: () => void;
@@ -183,6 +184,10 @@ export function CrawlLoader({ onComplete }: CrawlLoaderProps) {
 
         // 预加载历史数据（不阻塞主流程）
         preloadHistoryData().catch(console.error);
+        
+        // 预加载 LinkedIn/Facebook 平台新闻（不阻塞主流程）
+        console.log("[CrawlLoader] 🔍 Starting platform news preload (LinkedIn/Facebook)...");
+        preloadPlatformNews().catch(console.error);
 
         // Step 2: 先连接 SSE（在触发爬虫之前！）
         console.log("[CrawlLoader] 🔌 Step 2: Connecting SSE...");

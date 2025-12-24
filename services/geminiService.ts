@@ -469,3 +469,133 @@ export const runGrowthAnalyticsAgent = async (signals: SocialSignal[]): Promise<
         return [];
     }
 };
+
+/**
+ * Platform News Search Result
+ */
+export interface PlatformNewsItem {
+    id: string;
+    title: string;
+    summary: string;
+    platform: 'LinkedIn' | 'Facebook';
+    tag: string;
+    url?: string;
+    publishedAt?: string;
+    engagement?: {
+        likes?: number;
+        comments?: number;
+        shares?: number;
+    };
+    sentiment: 'positive' | 'neutral' | 'negative';
+    relevanceScore: number;
+}
+
+/**
+ * PLATFORM NEWS SEARCH: Search LinkedIn and Facebook trends by tags
+ * Uses Google Search grounding to find real-time news and posts
+ */
+export const searchPlatformNews = async (
+    tags: string[], 
+    platforms: ('LinkedIn' | 'Facebook')[] = ['LinkedIn', 'Facebook']
+): Promise<PlatformNewsItem[]> => {
+    if (!apiKey) {
+        console.warn("[Gemini] API Key missing, skipping platform news search");
+        return [];
+    }
+    
+    if (!tags || tags.length === 0) {
+        console.warn("[Gemini] No tags provided for platform news search");
+        return [];
+    }
+
+    const model = "gemini-2.5-flash";
+    const today = new Date().toISOString().split('T')[0];
+    
+    const prompt = `
+    You are a Social Media Intelligence Agent specializing in LinkedIn and Facebook trend analysis.
+    
+    Current Date: ${today}
+    Search Tags: ${tags.join(', ')}
+    Target Platforms: ${platforms.join(', ')}
+    
+    TASK:
+    Search for the LATEST news, posts, and trending discussions on ${platforms.join(' and ')} related to these tags.
+    Focus on:
+    - Professional insights and industry news (LinkedIn)
+    - Viral posts and community discussions (Facebook)
+    - Recent announcements, product launches, or trending topics
+    - Influencer posts and thought leadership content
+    
+    For each tag, find 2-3 relevant items per platform.
+    
+    OUTPUT JSON ARRAY (strict schema):
+    [
+      {
+        "title": "Headline or post title",
+        "summary": "2-3 sentence summary of the content",
+        "platform": "LinkedIn" or "Facebook",
+        "tag": "The matching tag from input",
+        "url": "Source URL if available",
+        "publishedAt": "ISO date string or 'recent'",
+        "engagement": {
+          "likes": estimated number,
+          "comments": estimated number,
+          "shares": estimated number
+        },
+        "sentiment": "positive|neutral|negative",
+        "relevanceScore": 0-100
+      }
+    ]
+    
+    Return 8-15 items total, sorted by relevanceScore descending.
+    Only include items that are genuinely relevant and recent (within last 7 days if possible).
+    `;
+
+    try {
+        console.log(`[Gemini] 🔍 Searching ${platforms.join('/')} for tags: ${tags.join(', ')}`);
+        
+        const response = await ai.models.generateContent({
+            model,
+            contents: prompt,
+            config: { 
+                tools: [{ googleSearch: {} }] // Use Google Search grounding for real-time data
+            },
+        });
+
+        const data = cleanAndParseJSON(response.text || "[]", []);
+        
+        if (!Array.isArray(data)) {
+            console.warn("[Gemini] Invalid response format for platform news");
+            return [];
+        }
+
+        // Process and validate results
+        const results: PlatformNewsItem[] = data
+            .filter((item: any) => item && typeof item === 'object')
+            .map((item: any, index: number) => ({
+                id: `news-${Date.now()}-${index}`,
+                title: item.title || 'Untitled',
+                summary: item.summary || '',
+                platform: item.platform === 'Facebook' ? 'Facebook' : 'LinkedIn',
+                tag: item.tag || tags[0],
+                url: item.url || undefined,
+                publishedAt: item.publishedAt || undefined,
+                engagement: {
+                    likes: item.engagement?.likes || 0,
+                    comments: item.engagement?.comments || 0,
+                    shares: item.engagement?.shares || 0,
+                },
+                sentiment: ['positive', 'neutral', 'negative'].includes(item.sentiment) 
+                    ? item.sentiment 
+                    : 'neutral',
+                relevanceScore: Math.min(100, Math.max(0, item.relevanceScore || 50)),
+            }));
+
+        console.log(`[Gemini] ✅ Found ${results.length} platform news items`);
+        return results;
+
+    } catch (error) {
+        console.error("[Gemini] Platform news search error:", error);
+        return [];
+    }
+};
