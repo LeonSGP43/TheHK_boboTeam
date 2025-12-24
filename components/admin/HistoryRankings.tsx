@@ -4,21 +4,22 @@
  * 显示过去2小时内各平台的得分排名
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
     Trophy, Crown, Medal, Award, RefreshCw, Clock,
     Twitter, Video, MessageCircle, Linkedin, Youtube, Instagram, Facebook,
-    TrendingUp, Zap, Activity, BarChart3
+    TrendingUp, Activity, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown
 } from 'lucide-react';
 import { BACKEND_URL } from '../../config/env';
-import { getCachedHistoryData, preloadHistoryData } from '../../services/historyCache';
+import { getCachedHistoryData } from '../../services/historyCache';
 
 interface RankedItem {
     id: string;
     timestamp: string;
     platform: string;
     hashtag: string;
+    title?: string;
     trend_score: number;
     dimensions: {
         H: number;
@@ -41,6 +42,10 @@ interface HistoryStats {
     platforms: Record<string, number>;
     average_scores: Record<string, number>;
 }
+
+// 排序字段类型
+type SortField = 'rank' | 'title' | 'hashtag' | 'platform' | 'trend_score' | 'timestamp';
+type SortOrder = 'asc' | 'desc';
 
 // 平台图标映射
 const PLATFORM_ICONS: Record<string, React.ElementType> = {
@@ -72,9 +77,12 @@ export function HistoryRankings() {
     const [loading, setLoading] = useState(true);
     const [selectedPlatform, setSelectedPlatform] = useState<string>('ALL');
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+    
+    // 排序状态
+    const [sortField, setSortField] = useState<SortField>('trend_score');
+    const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
     const fetchData = async (useCache = false) => {
-        // 优先使用缓存数据
         if (useCache) {
             const cached = getCachedHistoryData();
             if (cached) {
@@ -113,24 +121,82 @@ export function HistoryRankings() {
     };
 
     useEffect(() => {
-        // 首次加载优先使用缓存
         fetchData(true);
         const interval = setInterval(() => fetchData(false), 30000);
         return () => clearInterval(interval);
     }, []);
 
-    // 获取当前显示的排名数据
-    const getCurrentRankings = (): RankedItem[] => {
-        if (selectedPlatform === 'ALL') {
-            return (Object.values(rankings) as Array<{ records: RankedItem[]; total: number }>)
-                .flatMap(p => p.records || [])
-                .sort((a, b) => b.trend_score - a.trend_score)
-                .map((item, index) => ({ ...item, rank: index + 1 }));
+    // 处理排序点击
+    const handleSort = (field: SortField) => {
+        if (sortField === field) {
+            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortOrder(field === 'trend_score' ? 'desc' : 'asc');
         }
-        return rankings[selectedPlatform]?.records || [];
     };
 
-    const currentRankings = getCurrentRankings();
+    // 排序图标
+    const SortIcon = ({ field }: { field: SortField }) => {
+        if (sortField !== field) {
+            return <ChevronsUpDown size={12} className="text-slate-600" />;
+        }
+        return sortOrder === 'asc' 
+            ? <ChevronUp size={12} className="text-pulse" />
+            : <ChevronDown size={12} className="text-pulse" />;
+    };
+
+    // 获取并排序数据
+    const currentRankings = useMemo(() => {
+        let data: RankedItem[];
+        
+        if (selectedPlatform === 'ALL') {
+            data = (Object.values(rankings) as Array<{ records: RankedItem[]; total: number }>)
+                .flatMap(p => p.records || []);
+        } else {
+            data = rankings[selectedPlatform]?.records || [];
+        }
+
+        // 排序
+        const sorted = [...data].sort((a, b) => {
+            let aVal: any, bVal: any;
+            
+            switch (sortField) {
+                case 'title':
+                    aVal = (a.title || a.description || '').toLowerCase();
+                    bVal = (b.title || b.description || '').toLowerCase();
+                    break;
+                case 'hashtag':
+                    aVal = (a.hashtag || '').toLowerCase();
+                    bVal = (b.hashtag || '').toLowerCase();
+                    break;
+                case 'platform':
+                    aVal = a.platform;
+                    bVal = b.platform;
+                    break;
+                case 'trend_score':
+                    aVal = a.trend_score;
+                    bVal = b.trend_score;
+                    break;
+                case 'timestamp':
+                    aVal = new Date(a.timestamp).getTime();
+                    bVal = new Date(b.timestamp).getTime();
+                    break;
+                default:
+                    aVal = a.trend_score;
+                    bVal = b.trend_score;
+            }
+
+            if (typeof aVal === 'string') {
+                return sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+            }
+            return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+        });
+
+        // 添加排名
+        return sorted.map((item, index) => ({ ...item, rank: index + 1 }));
+    }, [rankings, selectedPlatform, sortField, sortOrder]);
+
     const platforms = ['ALL', ...Object.keys(rankings)];
 
     const getRankBadge = (rank: number) => {
@@ -178,7 +244,7 @@ export function HistoryRankings() {
                     </div>
                 </div>
                 <button
-                    onClick={fetchData}
+                    onClick={() => fetchData(false)}
                     disabled={loading}
                     className="flex items-center gap-2 px-3 py-1.5 bg-pulse/10 hover:bg-pulse/20 text-pulse border border-pulse/30 rounded text-xs font-bold transition-all disabled:opacity-50"
                 >
@@ -258,25 +324,51 @@ export function HistoryRankings() {
                     <table className="w-full text-left">
                         <thead className="sticky top-0 bg-[#0d1220] z-10">
                             <tr className="border-b border-white/10 text-[10px] uppercase font-mono text-slate-500">
-                                <th className="py-2 px-4 w-16">排名</th>
-                                <th className="py-2 px-4">话题</th>
-                                <th className="py-2 px-4">平台</th>
-                                <th className="py-2 px-4 text-center">得分</th>
+                                <th className="py-2 px-4 w-16">
+                                    <button onClick={() => handleSort('rank')} className="flex items-center gap-1 hover:text-slate-300">
+                                        排名 <SortIcon field="rank" />
+                                    </button>
+                                </th>
+                                <th className="py-2 px-4">
+                                    <button onClick={() => handleSort('title')} className="flex items-center gap-1 hover:text-slate-300">
+                                        标题 <SortIcon field="title" />
+                                    </button>
+                                </th>
+                                <th className="py-2 px-4">
+                                    <button onClick={() => handleSort('hashtag')} className="flex items-center gap-1 hover:text-slate-300">
+                                        话题 <SortIcon field="hashtag" />
+                                    </button>
+                                </th>
+                                <th className="py-2 px-4">
+                                    <button onClick={() => handleSort('platform')} className="flex items-center gap-1 hover:text-slate-300">
+                                        平台 <SortIcon field="platform" />
+                                    </button>
+                                </th>
+                                <th className="py-2 px-4 text-center">
+                                    <button onClick={() => handleSort('trend_score')} className="flex items-center gap-1 hover:text-slate-300 mx-auto">
+                                        得分 <SortIcon field="trend_score" />
+                                    </button>
+                                </th>
                                 <th className="py-2 px-4">维度</th>
-                                <th className="py-2 px-4">时间</th>
+                                <th className="py-2 px-4">
+                                    <button onClick={() => handleSort('timestamp')} className="flex items-center gap-1 hover:text-slate-300">
+                                        时间 <SortIcon field="timestamp" />
+                                    </button>
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
                             {currentRankings.map((item, idx) => {
                                 const PlatformIcon = PLATFORM_ICONS[item.platform] || Activity;
                                 const platformStyle = PLATFORM_COLORS[item.platform] || 'bg-slate-800 text-slate-400';
+                                const title = item.title || item.description || '-';
                                 
                                 return (
                                     <motion.tr
                                         key={`${item.platform}-${item.id}-${idx}`}
                                         initial={{ opacity: 0, x: -10 }}
                                         animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: idx * 0.02 }}
+                                        transition={{ delay: Math.min(idx * 0.01, 0.5) }}
                                         className="hover:bg-white/5 transition-colors"
                                     >
                                         <td className="py-3 px-4">
@@ -285,14 +377,14 @@ export function HistoryRankings() {
                                             </div>
                                         </td>
                                         <td className="py-3 px-4">
-                                            <div className="font-bold text-sm text-slate-200">
-                                                {item.hashtag}
+                                            <div className="font-medium text-sm text-slate-200 truncate max-w-[250px]" title={title}>
+                                                {title}
                                             </div>
-                                            {item.description && (
-                                                <p className="text-[10px] text-slate-500 truncate max-w-[200px]">
-                                                    {item.description}
-                                                </p>
-                                            )}
+                                        </td>
+                                        <td className="py-3 px-4">
+                                            <span className="text-xs text-pulse font-bold">
+                                                {item.hashtag || '-'}
+                                            </span>
                                         </td>
                                         <td className="py-3 px-4">
                                             <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded ${platformStyle}`}>
