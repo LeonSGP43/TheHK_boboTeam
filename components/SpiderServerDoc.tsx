@@ -24,8 +24,8 @@ export const SpiderServerDoc: React.FC<SpiderServerDocProps> = ({ isOpen, onClos
           {/* Header */}
           <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 flex justify-between items-center rounded-t-lg">
             <div>
-              <h1 className="text-3xl font-bold">🕷️ Spider6P 爬虫服务器</h1>
-              <p className="text-blue-100 mt-1">HTTP API 文档</p>
+              <h1 className="text-3xl font-bold">🕷️ Spider6P Crawler Server</h1>
+              <p className="text-blue-100 mt-1">HTTP API Documentation</p>
             </div>
             <button
               onClick={onClose}
@@ -37,12 +37,12 @@ export const SpiderServerDoc: React.FC<SpiderServerDocProps> = ({ isOpen, onClos
 
           {/* Content */}
           <div className="p-8 space-y-8">
-            {/* 快速开始 */}
+            {/* Quick Start */}
             <section>
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">快速开始</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Quick Start</h2>
               <div className="bg-gray-50 p-4 rounded-lg space-y-3">
                 <div>
-                  <p className="text-sm text-gray-600 mb-2">启动爬虫服务器：</p>
+                  <p className="text-sm text-gray-600 mb-2">Start the crawler server:</p>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 bg-gray-900 text-green-400 p-3 rounded font-mono text-sm overflow-x-auto">
                       cd spider6p && npm run server
@@ -56,7 +56,7 @@ export const SpiderServerDoc: React.FC<SpiderServerDocProps> = ({ isOpen, onClos
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 mb-2">或一键启动所有服务：</p>
+                  <p className="text-sm text-gray-600 mb-2">Or start all services at once:</p>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 bg-gray-900 text-green-400 p-3 rounded font-mono text-sm overflow-x-auto">
                       ./start-dev.sh
@@ -72,16 +72,16 @@ export const SpiderServerDoc: React.FC<SpiderServerDocProps> = ({ isOpen, onClos
               </div>
             </section>
 
-            {/* API 接口 */}
+            {/* API Endpoints */}
             <section>
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">API 接口</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">API Endpoints</h2>
               <div className="space-y-4">
                 {/* POST /run */}
                 <div className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="bg-green-100 text-green-800 px-3 py-1 rounded font-mono text-sm font-bold">POST</span>
                     <code className="text-gray-700 font-mono">/run</code>
-                    <span className="text-gray-500 text-sm">启动爬取（默认标签）</span>
+                    <span className="text-gray-500 text-sm">Start crawling (default tags)</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 bg-gray-100 p-2 rounded font-mono text-sm overflow-x-auto">
@@ -101,7 +101,7 @@ export const SpiderServerDoc: React.FC<SpiderServerDocProps> = ({ isOpen, onClos
                   <div className="flex items-center gap-2 mb-3">
                     <span className="bg-green-100 text-green-800 px-3 py-1 rounded font-mono text-sm font-bold">POST</span>
                     <code className="text-gray-700 font-mono">/run/tags</code>
-                    <span className="text-gray-500 text-sm">指定标签爬取</span>
+                    <span className="text-gray-500 text-sm">Crawl with specified tags</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 bg-gray-100 p-2 rounded font-mono text-sm overflow-x-auto">
@@ -121,7 +121,7 @@ export const SpiderServerDoc: React.FC<SpiderServerDocProps> = ({ isOpen, onClos
                   <div className="flex items-center gap-2 mb-3">
                     <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded font-mono text-sm font-bold">GET</span>
                     <code className="text-gray-700 font-mono">/status</code>
-                    <span className="text-gray-500 text-sm">获取爬虫状态</span>
+                    <span className="text-gray-500 text-sm">Get crawler status</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 bg-gray-100 p-2 rounded font-mono text-sm overflow-x-auto">
@@ -141,7 +141,7 @@ export const SpiderServerDoc: React.FC<SpiderServerDocProps> = ({ isOpen, onClos
                   <div className="flex items-center gap-2 mb-3">
                     <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded font-mono text-sm font-bold">GET</span>
                     <code className="text-gray-700 font-mono">/health</code>
-                    <span className="text-gray-500 text-sm">健康检查</span>
+                    <span className="text-gray-500 text-sm">Health check</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 bg-gray-100 p-2 rounded font-mono text-sm overflow-x-auto">
@@ -158,76 +158,76 @@ export const SpiderServerDoc: React.FC<SpiderServerDocProps> = ({ isOpen, onClos
               </div>
             </section>
 
-            {/* 数据流 */}
+            {/* Data Flow */}
             <section>
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">数据流</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Data Flow</h2>
               <div className="bg-blue-50 p-4 rounded-lg font-mono text-sm space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-blue-600">爬虫服务器 (8001)</span>
+                  <span className="text-blue-600">Crawler Server (8001)</span>
                 </div>
                 <div className="flex items-center gap-2 ml-4">
                   <span className="text-gray-400">↓</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-blue-600">爬取数据 (TikTok, Instagram, etc.)</span>
+                  <span className="text-blue-600">Crawl Data (TikTok, Instagram, etc.)</span>
                 </div>
                 <div className="flex items-center gap-2 ml-4">
                   <span className="text-gray-400">↓</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-blue-600">发送到 Kafka (market-stream)</span>
+                  <span className="text-blue-600">Send to Kafka (market-stream)</span>
                 </div>
                 <div className="flex items-center gap-2 ml-4">
                   <span className="text-gray-400">↓</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-blue-600">后端消费 (8000)</span>
+                  <span className="text-blue-600">Backend Consumer (8000)</span>
                 </div>
                 <div className="flex items-center gap-2 ml-4">
                   <span className="text-gray-400">↓</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-blue-600">计算 VKS 分数</span>
+                  <span className="text-blue-600">Calculate VKS Score</span>
                 </div>
                 <div className="flex items-center gap-2 ml-4">
                   <span className="text-gray-400">↓</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-blue-600">SSE 推送到前端 (3000)</span>
+                  <span className="text-blue-600">SSE Push to Frontend (3000)</span>
                 </div>
                 <div className="flex items-center gap-2 ml-4">
                   <span className="text-gray-400">↓</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-blue-600">实时图表显示</span>
+                  <span className="text-blue-600">Real-time Chart Display</span>
                 </div>
               </div>
             </section>
 
-            {/* 服务地址 */}
+            {/* Service Addresses */}
             <section>
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">服务地址</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Service Addresses</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">后端 API</p>
+                  <p className="text-sm text-gray-600 mb-1">Backend API</p>
                   <a href="http://localhost:8000" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
                     http://localhost:8000 <ExternalLink size={14} />
                   </a>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">前端页面</p>
+                  <p className="text-sm text-gray-600 mb-1">Frontend</p>
                   <a href="http://localhost:3000" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
                     http://localhost:3000 <ExternalLink size={14} />
                   </a>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">爬虫服务</p>
+                  <p className="text-sm text-gray-600 mb-1">Crawler Service</p>
                   <a href="http://localhost:8001" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
                     http://localhost:8001 <ExternalLink size={14} />
                   </a>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">API 文档</p>
+                  <p className="text-sm text-gray-600 mb-1">API Documentation</p>
                   <a href="http://localhost:8000/docs" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
                     http://localhost:8000/docs <ExternalLink size={14} />
                   </a>
@@ -235,10 +235,10 @@ export const SpiderServerDoc: React.FC<SpiderServerDocProps> = ({ isOpen, onClos
               </div>
             </section>
 
-            {/* 提示 */}
+            {/* Tip */}
             <section className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <p className="text-sm text-yellow-800">
-                <strong>💡 提示：</strong> 完整文档请查看 <code className="bg-yellow-100 px-2 py-1 rounded">spider6p/doc/SPIDER_SERVER.md</code>
+                <strong>💡 Tip:</strong> For complete documentation, see <code className="bg-yellow-100 px-2 py-1 rounded">spider6p/doc/SPIDER_SERVER.md</code>
               </p>
             </section>
           </div>

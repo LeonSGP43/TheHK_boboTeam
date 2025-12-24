@@ -428,7 +428,7 @@ const LiveWaveChart: React.FC<{ data: StreamDataPoint[] }> = ({ data }) => {
 export function CrawlLoader({ onComplete }: CrawlLoaderProps) {
   // 状态管理
   const [phase, setPhase] = useState<CrawlPhase>("init");
-  const [statusText, setStatusText] = useState("初始化...");
+  const [statusText, setStatusText] = useState("Initializing...");
   const [streamData, setStreamData] = useState<StreamDataPoint[]>([]);
   const [latestScore, setLatestScore] = useState(0);
   const [currentPlatform, setCurrentPlatform] = useState("");
@@ -461,7 +461,7 @@ export function CrawlLoader({ onComplete }: CrawlLoaderProps) {
         // Step 1: 检查爬虫服务器
         console.log("[CrawlLoader] 🔍 Step 1: Checking spider server...");
         setPhase("connecting");
-        setStatusText("检查服务器...");
+        setStatusText("Checking server...");
 
         const healthRes = await fetch(`${BACKEND_URL}/api/crawl/health`);
         const healthData = await healthRes.json();
@@ -469,7 +469,7 @@ export function CrawlLoader({ onComplete }: CrawlLoaderProps) {
 
         if (healthData.spider_server === "offline") {
           setPhase("error");
-          setErrorMessage("爬虫服务器未启动！请运行: cd spider6p && npm run server");
+          setErrorMessage("Spider server not running! Please run: cd spider6p && npm run server");
           return;
         }
 
@@ -481,7 +481,7 @@ export function CrawlLoader({ onComplete }: CrawlLoaderProps) {
 
         // Step 2: 先连接 SSE
         console.log("[CrawlLoader] 🔌 Step 2: Connecting SSE...");
-        setStatusText("连接数据流...");
+        setStatusText("Connecting to data stream...");
 
         const eventSource = new EventSource(`${BACKEND_URL}/api/stream/all`);
         eventSourceRef.current = eventSource;
@@ -559,7 +559,7 @@ export function CrawlLoader({ onComplete }: CrawlLoaderProps) {
         // Step 3: 触发爬虫
         console.log("[CrawlLoader] 🚀 Step 3: Triggering crawler (mock mode)...");
         setPhase("crawling");
-        setStatusText("启动爬虫...");
+        setStatusText("Starting crawler...");
 
         const triggerRes = await fetch(
           `${BACKEND_URL}/api/crawl/trigger?tags=AI,trending,viral&mock=true`,
@@ -573,7 +573,7 @@ export function CrawlLoader({ onComplete }: CrawlLoaderProps) {
         }
 
         setPhase("receiving");
-        setStatusText("接收数据中...");
+        setStatusText("Receiving data...");
 
         // Step 4: 轮询状态
         let pollCount = 0;
@@ -596,7 +596,7 @@ export function CrawlLoader({ onComplete }: CrawlLoaderProps) {
 
             if (status.current_platform && status.current_platform !== "IDLE") {
               setCurrentPlatform(status.current_platform);
-              setStatusText(`正在爬取: ${status.current_platform}`);
+              setStatusText(`Crawling: ${status.current_platform}`);
             }
 
             const hasData = historyStats.total_records > 0;
@@ -605,7 +605,7 @@ export function CrawlLoader({ onComplete }: CrawlLoaderProps) {
               console.log("[CrawlLoader] ✅ Crawl complete!");
               setCrawlComplete(true);
               setPhase("complete");
-              setStatusText("系统就绪");
+              setStatusText("System ready");
               return true;
             }
 
@@ -614,7 +614,7 @@ export function CrawlLoader({ onComplete }: CrawlLoaderProps) {
               console.log("[CrawlLoader] ⏰ Timeout, forcing complete");
               setCrawlComplete(true);
               setPhase("complete");
-              setStatusText("超时完成");
+              setStatusText("Timeout complete");
               return true;
             }
 
@@ -644,7 +644,7 @@ export function CrawlLoader({ onComplete }: CrawlLoaderProps) {
         console.error("[CrawlLoader] Init error:", error);
         if (mountedRef.current) {
           setPhase("error");
-          setErrorMessage("初始化失败: " + (error as Error).message);
+          setErrorMessage("Initialization failed: " + (error as Error).message);
         }
       }
     };
@@ -689,13 +689,13 @@ export function CrawlLoader({ onComplete }: CrawlLoaderProps) {
         exit={{ opacity: 0 }}
       >
         <AlertCircle size={64} className="text-red-500 mb-4" />
-        <h2 className="text-xl font-bold text-white mb-2">启动失败</h2>
+        <h2 className="text-xl font-bold text-white mb-2">Startup Failed</h2>
         <p className="text-red-400 text-center max-w-md mb-6">{errorMessage}</p>
         <button
           onClick={() => window.location.reload()}
           className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500"
         >
-          重试
+          Retry
         </button>
       </motion.div>
     );

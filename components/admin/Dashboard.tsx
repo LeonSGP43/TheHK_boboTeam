@@ -5,7 +5,7 @@ import { VKSChart } from './VKSChart';
 import { TrendIgnitionWidget } from './TrendIgnitionWidget';
 import { VKSSpark } from '../../components/effects/VKSSpark';
 import { HistoryRankings } from './HistoryRankings';
-// PlatformNewsPanel 已禁用，因为 LinkedIn/Facebook 没有数据
+// PlatformNewsPanel disabled - LinkedIn/Facebook have no data
 // import { PlatformNewsPanel } from '../../components/PlatformNewsPanel';
 import { Activity, Radio, AlertTriangle, Power, Network, Wifi, WifiOff, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -147,7 +147,7 @@ export function Dashboard() {
         <VKSChart data={data} />
       </div>
 
-      {/* Platform News (LinkedIn/Facebook) - 已禁用，因为这些平台没有数据 */}
+      {/* Platform News (LinkedIn/Facebook) - Disabled, these platforms have no data */}
       {/* <div className="relative z-10">
         <PlatformNewsPanel />
       </div> */}

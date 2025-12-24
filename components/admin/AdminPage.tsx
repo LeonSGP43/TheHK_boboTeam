@@ -88,7 +88,7 @@ export function AdminPage({ onBack }: Props) {
         setConfigs(data.data);
       }
     } catch (e) {
-      setError('无法连接到后端服务');
+      setError('Unable to connect to backend');
     } finally {
       setLoading(false);
     }
@@ -109,10 +109,10 @@ export function AdminPage({ onBack }: Props) {
           ...prev,
           [key]: { ...prev[key], value, updated_at: new Date().toISOString() }
         }));
-        showSuccess(`已保存`);
+        showSuccess(`Saved`);
       }
     } catch {
-      showError('保存失败');
+      showError('Save failed');
       // 失败时重新加载
       loadConfigs();
     }
@@ -137,13 +137,13 @@ export function AdminPage({ onBack }: Props) {
       const data = await res.json();
       setCrawlResult(data);
       if (data.success) {
-        showSuccess('爬取完成');
+        showSuccess('Crawl complete');
       } else {
-        showError(data.message || '爬取失败');
+        showError(data.message || 'Crawl failed');
       }
       checkSpiderStatus();
     } catch {
-      showError('无法连接爬虫服务');
+      showError('Cannot connect to spider service');
     } finally {
       setCrawling(false);
     }
@@ -160,7 +160,7 @@ export function AdminPage({ onBack }: Props) {
     if (!newTag.trim()) return;
     const currentTags = configs['spider.tags']?.value || [];
     if (currentTags.includes(newTag.trim())) {
-      showError('标签已存在');
+      showError('Tag already exists');
       return;
     }
     setTagsLoading(true);
@@ -230,9 +230,9 @@ export function AdminPage({ onBack }: Props) {
             <div>
               <h1 className="text-xl font-bold flex items-center gap-2">
                 <Settings className="text-pulse" size={24} />
-                系统管理
+                System Admin
               </h1>
-              <p className="text-xs text-slate-500">实时配置 · 爬虫控制 · 状态监控</p>
+              <p className="text-xs text-slate-500">Config · Crawler Control · Monitoring</p>
             </div>
           </div>
           
@@ -240,7 +240,7 @@ export function AdminPage({ onBack }: Props) {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-full">
               <Server size={14} />
-              <span className="text-xs">后端</span>
+              <span className="text-xs">Backend</span>
               <div className={`w-2 h-2 rounded-full ${
                 backendStatus === 'online' ? 'bg-green-500' : 
                 backendStatus === 'offline' ? 'bg-red-500' : 'bg-yellow-500 animate-pulse'
@@ -248,7 +248,7 @@ export function AdminPage({ onBack }: Props) {
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-full">
               <Terminal size={14} />
-              <span className="text-xs">爬虫</span>
+              <span className="text-xs">Spider</span>
               <div className={`w-2 h-2 rounded-full ${
                 spiderOnline === 'online' ? 'bg-green-500' : 
                 spiderOnline === 'offline' ? 'bg-red-500' : 'bg-yellow-500 animate-pulse'
@@ -292,7 +292,7 @@ export function AdminPage({ onBack }: Props) {
             <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
               <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <Tag size={20} />
-                爬取标签
+                Crawl Tags
                 {tagsLoading && <Loader2 className="animate-spin text-pulse" size={16} />}
               </h2>
               
@@ -314,7 +314,7 @@ export function AdminPage({ onBack }: Props) {
                     </span>
                   ))
                 ) : (
-                  <span className="text-slate-500 text-sm py-1.5">暂无标签，请添加</span>
+                  <span className="text-slate-500 text-sm py-1.5">No tags, please add</span>
                 )}
               </div>
               
@@ -324,7 +324,7 @@ export function AdminPage({ onBack }: Props) {
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && !tagsLoading && addTag()}
-                  placeholder="输入标签名称..."
+                  placeholder="Enter tag name..."
                   disabled={tagsLoading}
                   className="flex-1 px-4 py-2 bg-black/30 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-pulse disabled:opacity-50"
                 />
@@ -334,19 +334,19 @@ export function AdminPage({ onBack }: Props) {
                   className="px-4 py-2 bg-pulse text-black font-bold rounded-lg hover:bg-pulse/80 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {tagsLoading ? <Loader2 className="animate-spin" size={16} /> : <Plus size={16} />}
-                  添加
+                  Add
                 </button>
               </div>
             </section>
 
             {/* 爬虫模式 */}
             <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <h2 className="text-lg font-bold mb-4">爬虫模式</h2>
-              
+              <h2 className="text-lg font-bold mb-4">Crawler Mode</h2>
+
               <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl">
                 <div>
-                  <p className="font-medium">Mock 模式</p>
-                  <p className="text-xs text-slate-500">开启后使用本地数据，不消耗 API 额度</p>
+                  <p className="font-medium">Mock Mode</p>
+                  <p className="text-xs text-slate-500">Uses local data when enabled, no API cost</p>
                 </div>
                 <button
                   onClick={() => toggleConfig('spider.use_mock')}
@@ -362,12 +362,12 @@ export function AdminPage({ onBack }: Props) {
             <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
               <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <Clock size={20} />
-                爬取参数
+                Crawl Parameters
               </h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-slate-500 block mb-2">每标签帖子数</label>
+                  <label className="text-xs text-slate-500 block mb-2">Posts per tag</label>
                   <input
                     type="number"
                     value={limit}
@@ -376,7 +376,7 @@ export function AdminPage({ onBack }: Props) {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-500 block mb-2">请求间隔 (毫秒)</label>
+                  <label className="text-xs text-slate-500 block mb-2">Request delay (ms)</label>
                   <input
                     type="number"
                     value={delay}
@@ -389,7 +389,7 @@ export function AdminPage({ onBack }: Props) {
 
             {/* 平台开关 */}
             <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <h2 className="text-lg font-bold mb-4">平台开关</h2>
+              <h2 className="text-lg font-bold mb-4">Platform Switches</h2>
               
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {platforms.map((p) => {
@@ -423,9 +423,9 @@ export function AdminPage({ onBack }: Props) {
         <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
           <h2 className="text-lg font-bold mb-2 flex items-center gap-2">
             <FlaskConical className="text-yellow-500" size={20} />
-            爬虫测试
+            Crawler Test
           </h2>
-          <p className="text-xs text-slate-500 mb-4">测试爬虫功能，确认配置正确后再用于生产</p>
+          <p className="text-xs text-slate-500 mb-4">Test crawler before production use</p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <button
@@ -434,8 +434,8 @@ export function AdminPage({ onBack }: Props) {
               className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl flex flex-col items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Database size={24} className="text-blue-400" />
-              <span className="font-bold">Mock 测试</span>
-              <span className="text-xs text-slate-500 text-center">使用本地缓存数据，不消耗 API</span>
+              <span className="font-bold">Mock Test</span>
+              <span className="text-xs text-slate-500 text-center">Uses local cached data, no API cost</span>
             </button>
             
             <button
@@ -444,8 +444,8 @@ export function AdminPage({ onBack }: Props) {
               className="p-4 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 rounded-xl flex flex-col items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <AlertTriangle size={24} className="text-orange-500" />
-              <span className="font-bold">真实爬取</span>
-              <span className="text-xs text-slate-500 text-center">调用 API 爬取，会消耗额度</span>
+              <span className="font-bold">Real Crawl</span>
+              <span className="text-xs text-slate-500 text-center">Calls API, consumes quota</span>
             </button>
           </div>
 
@@ -453,7 +453,7 @@ export function AdminPage({ onBack }: Props) {
           {crawling && (
             <div className="flex items-center gap-3 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl mb-4">
               <Loader2 className="animate-spin text-yellow-500" size={20} />
-              <span className="text-yellow-500 font-medium">爬取进行中...</span>
+              <span className="text-yellow-500 font-medium">Crawling in progress...</span>
             </div>
           )}
 
@@ -461,23 +461,23 @@ export function AdminPage({ onBack }: Props) {
           {spiderStatus && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-black/20 rounded-xl">
               <div>
-                <span className="text-xs text-slate-500">状态</span>
+                <span className="text-xs text-slate-500">Status</span>
                 <p className={`font-bold ${spiderStatus.running ? 'text-yellow-500' : 'text-green-500'}`}>
-                  {spiderStatus.running ? '运行中' : '空闲'}
+                  {spiderStatus.running ? 'Running' : 'Idle'}
                 </p>
               </div>
               <div>
-                <span className="text-xs text-slate-500">总运行次数</span>
+                <span className="text-xs text-slate-500">Total Runs</span>
                 <p className="font-bold">{spiderStatus.totalRuns}</p>
               </div>
               <div>
-                <span className="text-xs text-slate-500">上次运行</span>
+                <span className="text-xs text-slate-500">Last Run</span>
                 <p className="font-bold text-sm">
                   {spiderStatus.lastRun ? new Date(spiderStatus.lastRun).toLocaleString() : '-'}
                 </p>
               </div>
               <div>
-                <span className="text-xs text-slate-500">当前标签</span>
+                <span className="text-xs text-slate-500">Current Tags</span>
                 <p className="font-bold text-sm truncate">{spiderStatus.config?.tags?.join(', ') || '-'}</p>
               </div>
             </div>
@@ -503,7 +503,7 @@ export function AdminPage({ onBack }: Props) {
               <Terminal className="text-green-400" size={20} />
               System Logs
             </h2>
-            <p className="text-xs text-slate-500">实时系统日志监控</p>
+            <p className="text-xs text-slate-500">Real-time system log monitoring</p>
           </div>
           <div className="h-[400px]">
             <LogsViewer />
@@ -541,14 +541,14 @@ export function AdminPage({ onBack }: Props) {
                   <Database className="text-blue-400" size={24} />
                 )}
                 <h3 className="text-lg font-bold">
-                  {showCrawlConfirm === 'real' ? '确认真实爬取？' : '确认 Mock 测试？'}
+                  {showCrawlConfirm === 'real' ? 'Confirm Real Crawl?' : 'Confirm Mock Test?'}
                 </h3>
               </div>
-              
+
               <p className="text-sm text-slate-400 mb-6">
-                {showCrawlConfirm === 'real' 
-                  ? '真实爬取会调用 TikHub API，消耗 API 额度。确定要继续吗？'
-                  : 'Mock 测试将使用本地缓存数据，不会消耗 API 额度。'
+                {showCrawlConfirm === 'real'
+                  ? 'Real crawl will call TikHub API and consume quota. Continue?'
+                  : 'Mock test uses local cached data, no API cost.'
                 }
               </p>
 
@@ -557,7 +557,7 @@ export function AdminPage({ onBack }: Props) {
                   onClick={() => setShowCrawlConfirm(null)}
                   className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-medium transition-colors"
                 >
-                  取消
+                  Cancel
                 </button>
                 <button
                   onClick={executeCrawl}
@@ -567,7 +567,7 @@ export function AdminPage({ onBack }: Props) {
                       : 'bg-blue-500 hover:bg-blue-600 text-white'
                   }`}
                 >
-                  确认执行
+                  Confirm
                 </button>
               </div>
             </motion.div>

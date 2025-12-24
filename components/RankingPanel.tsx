@@ -229,8 +229,8 @@ export const RankingPanel: React.FC<RankingPanelProps> = ({
         return (
             <div className="p-6 text-center">
                 <Trophy size={32} className="mx-auto text-slate-600 mb-3" />
-                <p className="text-sm text-slate-500">暂无排名数据</p>
-                <p className="text-[10px] text-slate-600 mt-1">等待数据流入...</p>
+                <p className="text-sm text-slate-500">No ranking data yet</p>
+                <p className="text-[10px] text-slate-600 mt-1">Waiting for data stream...</p>
             </div>
         );
     }
@@ -245,7 +245,7 @@ export const RankingPanel: React.FC<RankingPanelProps> = ({
                 <div className="flex items-center gap-2">
                     <Trophy size={18} className="text-yellow-500" />
                     <span className="text-sm font-bold text-white">
-                        {activePlatform === 'ALL' ? '全局排名' : `${activePlatform} 排名`}
+                        {activePlatform === 'ALL' ? 'Global Ranking' : `${activePlatform} Ranking`}
                     </span>
                     <span className="text-[10px] bg-pulse/20 text-pulse px-2 py-0.5 rounded-full">
                         TOP {currentRankings.length}

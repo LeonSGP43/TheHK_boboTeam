@@ -285,7 +285,7 @@ const App: React.FC = () => {
                       onClick={() => setLoadingApp(true)} 
                       disabled={loadingApp}
                       className="w-10 h-10 rounded-full bg-spark/10 hover:bg-spark/20 text-spark flex items-center justify-center transition-all border border-spark/20"
-                      title="重新爬取数据"
+                      title="Re-crawl data"
                   >
                       <RefreshCw size={16} className={loadingApp ? "animate-spin" : ""} />
                   </button>

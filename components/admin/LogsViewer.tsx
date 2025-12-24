@@ -57,7 +57,7 @@ export const LogsViewer: React.FC = () => {
       const statsData = await statsResponse.json();
       setStats(statsData);
     } catch (error) {
-      console.error('获取日志失败:', error);
+      console.error('Failed to fetch logs:', error);
     } finally {
       setLoading(false);
     }
@@ -82,13 +82,13 @@ export const LogsViewer: React.FC = () => {
 
   // 清空日志
   const handleClear = async () => {
-    if (confirm('确定要清空所有日志吗？')) {
+    if (confirm('Are you sure you want to clear all logs?')) {
       try {
         await fetch(`${BACKEND_URL}/api/logs/`, { method: 'DELETE' });
         setLogs([]);
         setStats(null);
       } catch (error) {
-        console.error('清空日志失败:', error);
+        console.error('Failed to clear logs:', error);
       }
     }
   };
@@ -113,27 +113,27 @@ export const LogsViewer: React.FC = () => {
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold">系统日志</h2>
+          <h2 className="text-xl font-bold">System Logs</h2>
           <div className="flex items-center gap-2">
             <button
               onClick={fetchLogs}
               disabled={loading}
               className="p-2 hover:bg-blue-500 rounded-lg transition disabled:opacity-50"
-              title="刷新"
+              title="Refresh"
             >
               <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
             </button>
             <button
               onClick={handleExport}
               className="p-2 hover:bg-blue-500 rounded-lg transition"
-              title="导出"
+              title="Export"
             >
               <Download size={18} />
             </button>
             <button
               onClick={handleClear}
               className="p-2 hover:bg-red-500 rounded-lg transition"
-              title="清空"
+              title="Clear"
             >
               <Trash2 size={18} />
             </button>
@@ -144,7 +144,7 @@ export const LogsViewer: React.FC = () => {
         {stats && (
           <div className="flex gap-4 text-sm">
             <div>
-              <span className="opacity-75">总计:</span>
+              <span className="opacity-75">Total:</span>
               <span className="ml-2 font-bold">{stats.total}</span>
             </div>
             {Object.entries(stats.by_level).map(([level, count]: [string, any]) => (
@@ -161,7 +161,7 @@ export const LogsViewer: React.FC = () => {
       <div className="bg-gray-50 dark:bg-gray-800 p-4 border-b border-gray-200 dark:border-gray-700 flex gap-4 items-center flex-wrap">
         <div className="flex items-center gap-2">
           <Filter size={16} className="text-gray-500" />
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">过滤:</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter:</span>
         </div>
 
         {/* 日志级别过滤 */}
@@ -170,7 +170,7 @@ export const LogsViewer: React.FC = () => {
           onChange={(e) => setFilterLevel(e.target.value)}
           className="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
         >
-          <option value="">所有级别</option>
+          <option value="">All levels</option>
           <option value="DEBUG">DEBUG</option>
           <option value="INFO">INFO</option>
           <option value="WARNING">WARNING</option>
@@ -181,7 +181,7 @@ export const LogsViewer: React.FC = () => {
         {/* 记录器过滤 */}
         <input
           type="text"
-          placeholder="记录器名称..."
+          placeholder="Logger name..."
           value={filterLogger}
           onChange={(e) => setFilterLogger(e.target.value)}
           className="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
@@ -195,7 +195,7 @@ export const LogsViewer: React.FC = () => {
             onChange={(e) => setAutoRefresh(e.target.checked)}
             className="rounded"
           />
-          <span className="text-sm text-gray-700 dark:text-gray-300">自动刷新</span>
+          <span className="text-sm text-gray-700 dark:text-gray-300">Auto refresh</span>
         </label>
       </div>
 
@@ -203,7 +203,7 @@ export const LogsViewer: React.FC = () => {
       <div className="flex-1 overflow-y-auto font-mono text-sm">
         {logs.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-500">
-            暂无日志
+            No logs yet
           </div>
         ) : (
           logs.map((log, index) => (

@@ -1,7 +1,7 @@
 /**
- * HistoryRankings - 历史排名组件
- * 
- * 显示过去2小时内各平台的得分排名
+ * HistoryRankings - Historical Rankings Component
+ *
+ * Displays score rankings for each platform from the past 2 hours
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -221,16 +221,16 @@ export function HistoryRankings() {
                     <Trophy size={18} className="text-yellow-500" />
                     <div>
                         <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider">
-                            历史排名 (过去2小时)
+                            History Rankings (Past 2 Hours)
                         </h3>
                         <div className="flex items-center gap-3 mt-1">
                             {stats && (
                                 <>
                                     <span className="text-[10px] text-slate-500 font-mono">
-                                        总记录: {stats.total_records}
+                                        Total: {stats.total_records}
                                     </span>
                                     <span className="text-[10px] text-slate-500 font-mono">
-                                        平台: {Object.keys(stats.platforms).length}
+                                        Platforms: {Object.keys(stats.platforms).length}
                                     </span>
                                 </>
                             )}
@@ -249,7 +249,7 @@ export function HistoryRankings() {
                     className="flex items-center gap-2 px-3 py-1.5 bg-pulse/10 hover:bg-pulse/20 text-pulse border border-pulse/30 rounded text-xs font-bold transition-all disabled:opacity-50"
                 >
                     <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
-                    刷新
+                    Refresh
                 </button>
             </div>
 
@@ -288,14 +288,14 @@ export function HistoryRankings() {
                 <div className="px-4 py-2 bg-white/5 border-b border-white/5 flex items-center gap-4">
                     <div className="flex items-center gap-2">
                         <Activity size={12} className="text-pulse" />
-                        <span className="text-[10px] text-slate-400">平均分:</span>
+                        <span className="text-[10px] text-slate-400">Avg Score:</span>
                         <span className={`text-sm font-bold ${getScoreColor(stats.average_scores[selectedPlatform])}`}>
                             {stats.average_scores[selectedPlatform].toFixed(1)}
                         </span>
                     </div>
                     <div className="flex items-center gap-2">
                         <TrendingUp size={12} className="text-green-400" />
-                        <span className="text-[10px] text-slate-400">记录数:</span>
+                        <span className="text-[10px] text-slate-400">Records:</span>
                         <span className="text-sm font-bold text-slate-200">
                             {stats.platforms[selectedPlatform] || 0}
                         </span>
@@ -309,15 +309,15 @@ export function HistoryRankings() {
                     <div className="flex items-center justify-center h-full">
                         <div className="text-center">
                             <RefreshCw size={24} className="animate-spin text-pulse mx-auto mb-2" />
-                            <span className="text-sm text-slate-500">加载排名数据...</span>
+                            <span className="text-sm text-slate-500">Loading ranking data...</span>
                         </div>
                     </div>
                 ) : currentRankings.length === 0 ? (
                     <div className="flex items-center justify-center h-full">
                         <div className="text-center">
                             <Trophy size={32} className="text-slate-600 mx-auto mb-2" />
-                            <span className="text-sm text-slate-500">暂无排名数据</span>
-                            <p className="text-[10px] text-slate-600 mt-1">等待数据流入...</p>
+                            <span className="text-sm text-slate-500">No ranking data yet</span>
+                            <p className="text-[10px] text-slate-600 mt-1">Waiting for data stream...</p>
                         </div>
                     </div>
                 ) : (
@@ -326,33 +326,33 @@ export function HistoryRankings() {
                             <tr className="border-b border-white/10 text-[10px] uppercase font-mono text-slate-500">
                                 <th className="py-2 px-4 w-16">
                                     <button onClick={() => handleSort('rank')} className="flex items-center gap-1 hover:text-slate-300">
-                                        排名 <SortIcon field="rank" />
+                                        Rank <SortIcon field="rank" />
                                     </button>
                                 </th>
                                 <th className="py-2 px-4">
                                     <button onClick={() => handleSort('title')} className="flex items-center gap-1 hover:text-slate-300">
-                                        标题 <SortIcon field="title" />
+                                        Title <SortIcon field="title" />
                                     </button>
                                 </th>
                                 <th className="py-2 px-4">
                                     <button onClick={() => handleSort('hashtag')} className="flex items-center gap-1 hover:text-slate-300">
-                                        话题 <SortIcon field="hashtag" />
+                                        Hashtag <SortIcon field="hashtag" />
                                     </button>
                                 </th>
                                 <th className="py-2 px-4">
                                     <button onClick={() => handleSort('platform')} className="flex items-center gap-1 hover:text-slate-300">
-                                        平台 <SortIcon field="platform" />
+                                        Platform <SortIcon field="platform" />
                                     </button>
                                 </th>
                                 <th className="py-2 px-4 text-center">
                                     <button onClick={() => handleSort('trend_score')} className="flex items-center gap-1 hover:text-slate-300 mx-auto">
-                                        得分 <SortIcon field="trend_score" />
+                                        Score <SortIcon field="trend_score" />
                                     </button>
                                 </th>
-                                <th className="py-2 px-4">维度</th>
+                                <th className="py-2 px-4">Dimensions</th>
                                 <th className="py-2 px-4">
                                     <button onClick={() => handleSort('timestamp')} className="flex items-center gap-1 hover:text-slate-300">
-                                        时间 <SortIcon field="timestamp" />
+                                        Time <SortIcon field="timestamp" />
                                     </button>
                                 </th>
                             </tr>

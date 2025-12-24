@@ -1,6 +1,6 @@
 /**
  * Platform News Panel
- * 显示 LinkedIn 和 Facebook 的趋势新闻
+ * Displays LinkedIn and Facebook trending news
  */
 
 import React, { useState, useEffect } from 'react';

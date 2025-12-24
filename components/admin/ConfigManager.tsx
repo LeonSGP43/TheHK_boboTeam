@@ -36,10 +36,10 @@ export function ConfigManager() {
       if (data.success) {
         setConfigs(data.data);
       } else {
-        setError('加载配置失败');
+        setError('Failed to load config');
       }
     } catch (e) {
-      setError('无法连接到后端服务');
+      setError('Unable to connect to backend');
     } finally {
       setLoading(false);
     }
@@ -57,14 +57,14 @@ export function ConfigManager() {
       });
       const data = await res.json();
       if (data.success) {
-        setSuccess(`配置 ${key} 已保存`);
+        setSuccess(`Config ${key} saved`);
         setTimeout(() => setSuccess(null), 2000);
         loadConfigs();
       } else {
-        setError('保存失败');
+        setError('Save failed');
       }
     } catch (e) {
-      setError('保存配置失败');
+      setError('Failed to save config');
     } finally {
       setSaving(false);
     }
@@ -76,11 +76,11 @@ export function ConfigManager() {
       const res = await fetch(`${SPIDER_URL}/config/refresh`, { method: 'POST' });
       const data = await res.json();
       if (data.success) {
-        setSuccess('爬虫配置已刷新');
+        setSuccess('Spider config refreshed');
         setTimeout(() => setSuccess(null), 2000);
       }
     } catch (e) {
-      setError('无法通知爬虫服务');
+      setError('Cannot notify spider service');
     }
   };
 
@@ -138,7 +138,7 @@ export function ConfigManager() {
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-3">
           <Settings className="text-pulse" size={24} />
-          <h2 className="text-xl font-bold text-white">系统配置</h2>
+          <h2 className="text-xl font-bold text-white">System Config</h2>
         </div>
         <div className="flex gap-2">
           <button
@@ -146,14 +146,14 @@ export function ConfigManager() {
             className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg flex items-center gap-2 text-sm text-slate-300 transition-colors"
           >
             <RefreshCw size={14} />
-            刷新
+            Refresh
           </button>
           <button
             onClick={refreshSpiderConfig}
             className="px-4 py-2 bg-pulse/20 hover:bg-pulse/30 border border-pulse/50 rounded-lg flex items-center gap-2 text-sm text-pulse transition-colors"
           >
             <Zap size={14} />
-            同步到爬虫
+            Sync to Spider
           </button>
         </div>
       </div>
@@ -186,11 +186,11 @@ export function ConfigManager() {
 
       {/* 爬虫模式 */}
       <div className="bg-card/50 backdrop-blur border border-white/10 rounded-xl p-5">
-        <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4">爬虫模式</h3>
+        <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4">Crawler Mode</h3>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-white font-medium">Mock 模式</p>
-            <p className="text-xs text-slate-500">开启后使用本地数据，不消耗 API 额度</p>
+            <p className="text-white font-medium">Mock Mode</p>
+            <p className="text-xs text-slate-500">Uses local data when enabled, no API cost</p>
           </div>
           <button
             onClick={() => toggleConfig('spider.use_mock')}
@@ -205,7 +205,7 @@ export function ConfigManager() {
       <div className="bg-card/50 backdrop-blur border border-white/10 rounded-xl p-5">
         <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
           <Tag size={14} />
-          爬取标签
+          Crawl Tags
         </h3>
         <div className="flex flex-wrap gap-2 mb-4">
           {tags.map((tag: string) => (
@@ -229,14 +229,14 @@ export function ConfigManager() {
             value={newTag}
             onChange={(e) => setNewTag(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && addTag()}
-            placeholder="添加新标签..."
+            placeholder="Add new tag..."
             className="flex-1 px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-pulse"
           />
           <button
             onClick={addTag}
             className="px-4 py-2 bg-pulse text-black font-bold rounded-lg hover:bg-pulse/80 transition-colors"
           >
-            添加
+            Add
           </button>
         </div>
       </div>
@@ -245,11 +245,11 @@ export function ConfigManager() {
       <div className="bg-card/50 backdrop-blur border border-white/10 rounded-xl p-5">
         <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
           <Clock size={14} />
-          爬取参数
+          Crawl Parameters
         </h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-xs text-slate-500 block mb-1">每标签帖子数</label>
+            <label className="text-xs text-slate-500 block mb-1">Posts per tag</label>
             <input
               type="number"
               value={limit}
@@ -258,7 +258,7 @@ export function ConfigManager() {
             />
           </div>
           <div>
-            <label className="text-xs text-slate-500 block mb-1">请求间隔 (ms)</label>
+            <label className="text-xs text-slate-500 block mb-1">Request delay (ms)</label>
             <input
               type="number"
               value={delay}
@@ -271,7 +271,7 @@ export function ConfigManager() {
 
       {/* 平台开关 */}
       <div className="bg-card/50 backdrop-blur border border-white/10 rounded-xl p-5">
-        <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4">平台开关</h3>
+        <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4">Platform Switches</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {platforms.map((p) => {
             const enabled = configs[p.key]?.value ?? false;
